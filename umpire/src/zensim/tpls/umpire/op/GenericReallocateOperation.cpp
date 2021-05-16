@@ -1,0 +1,36 @@
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2016-20, Lawrence Livermore National Security, LLC and Umpire
+// project contributors. See the COPYRIGHT file for details.
+//
+// SPDX-License-Identifier: (MIT)
+//////////////////////////////////////////////////////////////////////////////
+#include "zensim/tpls/umpire/op/GenericReallocateOperation.hpp"
+
+#include <cstdlib>
+
+#include "zensim/tpls/umpire/ResourceManager.hpp"
+#include "zensim/tpls/umpire/strategy/AllocationStrategy.hpp"
+#include "zensim/tpls/umpire/util/AllocationRecord.hpp"
+#include "zensim/tpls/umpire/util/Macros.hpp"
+
+namespace umpire {
+namespace op {
+
+void GenericReallocateOperation::transform(
+    void* current_ptr, void** new_ptr,
+    util::AllocationRecord* current_allocation,
+    util::AllocationRecord* new_allocation, std::size_t new_size)
+{
+  auto allocator = new_allocation->strategy;
+  *new_ptr = allocator->allocate(new_size);
+
+  const std::size_t old_size = current_allocation->size;
+  const std::size_t copy_size = (old_size > new_size) ? new_size : old_size;
+
+  ResourceManager::getInstance().copy(*new_ptr, current_ptr, copy_size);
+
+  allocator->deallocate(current_ptr);
+}
+
+} // end of namespace op
+} // end of namespace umpire

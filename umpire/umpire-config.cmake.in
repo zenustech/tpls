@@ -1,0 +1,22 @@
+##############################################################################
+# Copyright (c) 2016-20, Lawrence Livermore National Security, LLC and Umpire
+# project contributors. See the COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (MIT)
+##############################################################################
+get_filename_component(UMPIRE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(UMPIRE_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include")
+
+if (NOT TARGET camp)
+  if (NOT DEFINED camp_DIR)
+    set(camp_DIR @CMAKE_INSTALL_PREFIX@/lib/cmake/camp)
+  endif ()
+  find_package(camp REQUIRED)
+endif ()
+
+set(Umpire_VERSION_MAJOR  @Umpire_VERSION_MAJOR@)
+set(Umpire_VERSION_MINOR @Umpire_VERSION_MINOR@)
+set(Umpire_VERSION_PATCH @Umpire_VERSION_PATCH@)
+set(Umpire_VERSION_RC "@UMPIRE_VERSION_RC@")
+
+include("${UMPIRE_CMAKE_DIR}/umpire-targets.cmake")

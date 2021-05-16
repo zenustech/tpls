@@ -1,0 +1,55 @@
+//////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2016-20, Lawrence Livermore National Security, LLC and Umpire
+// project contributors. See the COPYRIGHT file for details.
+//
+// SPDX-License-Identifier: (MIT)
+//////////////////////////////////////////////////////////////////////////////
+#include "zensim/tpls/umpire/resource/NullMemoryResourceFactory.hpp"
+
+#include "zensim/tpls/umpire/resource/NullMemoryResource.hpp"
+#include "zensim/tpls/umpire/util/Macros.hpp"
+#include "zensim/tpls/umpire/util/make_unique.hpp"
+
+namespace umpire {
+namespace resource {
+
+bool NullMemoryResourceFactory::isValidMemoryResourceFor(
+    const std::string& name) noexcept
+{
+  if (name.compare("__umpire_internal_null") == 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+std::unique_ptr<resource::MemoryResource> NullMemoryResourceFactory::create(
+    const std::string& UMPIRE_UNUSED_ARG(name), int id)
+{
+  return create("__umpire_internal_null", id, getDefaultTraits());
+}
+
+std::unique_ptr<resource::MemoryResource> NullMemoryResourceFactory::create(
+    const std::string& name, int id, MemoryResourceTraits traits)
+{
+  return util::make_unique<NullMemoryResource>(Platform::undefined, name, id,
+                                               traits);
+}
+
+MemoryResourceTraits NullMemoryResourceFactory::getDefaultTraits()
+{
+  MemoryResourceTraits traits;
+
+  traits.unified = false;
+  traits.size = 0;
+
+  traits.vendor = MemoryResourceTraits::vendor_type::unknown;
+  traits.kind = MemoryResourceTraits::memory_type::unknown;
+  traits.used_for = MemoryResourceTraits::optimized_for::any;
+  traits.resource = MemoryResourceTraits::resource_type::unknown;
+
+  return traits;
+}
+
+} // end of namespace resource
+} // end of namespace umpire
