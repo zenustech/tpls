@@ -53,8 +53,12 @@ endif(ZS_ENABLE_OPENVDB)
 # cuda
 if (ZS_ENABLE_CUDA)
     find_package(CUDAToolkit)
-    if (TARGET CUDA::cudart)
-        target_link_libraries(zsproj_deps INTERFACE CUDA::cudart CUDA::cuda_driver CUDA::cublas CUDA::cusparse CUDA::cusolver)
+    if (TARGET CUDA::toolkit)
+        get_target_property(CUDA_IMPORT_STATUS CUDA::toolkit IMPORTED_GLOBAL)
+        if (NOT CUDA_IMPORT_STATUS)
+            set_target_properties(CUDA::toolkit PROPERTIES IMPORTED_GLOBAL TRUE)
+        endif()
+        target_link_libraries(zsproj_deps INTERFACE CUDA::cudart CUDA::cuda_driver CUDA::cublas CUDA::cusparse CUDA::cusolver CUDA::toolkit)
     else()
         set(ZS_ENABLE_CUDA OFF)
     endif()
@@ -101,23 +105,6 @@ target_include_directories(zsproj_deps
     INTERFACE   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/zensim/tpls/partio>
                 $<INSTALL_INTERFACE:include/zensim/tpls/partio>
 )
-
-# umpire
-if (ZS_ENABLE_CUDA)
-    set(ENABLE_CUDA On CACHE BOOL "Enable CUDA for Umpire build")
-endif()
-if (ZS_ENABLE_OPENMP)
-    set(ENABLE_OPENMP On CACHE BOOL "Enable CUDA for Umpire build")
-endif()
-add_subdirectory(umpire EXCLUDE_FROM_ALL)
-add_dependencies(zsproj_deps zsumpire)
-target_link_libraries(zsproj_deps INTERFACE zsumpire)
-if (ZS_ENABLE_CUDA)
-    unset(ENABLE_CUDA)
-endif()
-if (ZS_ENABLE_OPENMP)
-    unset(ENABLE_OPENMP)
-endif()
 
 # fmt
 target_compile_definitions(zsproj_deps INTERFACE FMT_HEADER_ONLY)
