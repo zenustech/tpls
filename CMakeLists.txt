@@ -10,9 +10,8 @@ option(ZS_ENABLE_OPENMP "Enable openmp" ON)
 option(ZS_ENABLE_PTHREADS "Enable pthreads" ON)
 option(ZS_ENABLE_PARTIO "Enable partio" ON)
 
-list(APPEND CMAKE_MODULE_PATH
-  ${PROJECT_SOURCE_DIR}/CMake
-)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(zsproj_deps INTERFACE)
 target_include_directories(zsproj_deps INTERFACE
@@ -46,7 +45,21 @@ if (ZS_ENABLE_OPENVDB)
         endif()
         # target_link_libraries(zsproj_deps INTERFACE OpenVDB::openvdb)
     else()
-        set(ZS_ENABLE_OPENVDB OFF)
+        include(CMake/conan.cmake)
+        conan_cmake_configure(REQUIRES openvdb/8.0.1
+                            GENERATORS cmake_find_package)
+        conan_cmake_autodetect(settings)
+        conan_cmake_install(PATH_OR_REFERENCE .
+                            BUILD missing
+                            REMOTE conan-center
+                            SETTINGS ${settings})
+        find_package(OpenVDB REQUIRED)
+        get_target_property(OPENVDB_IMPORT_STATUS CONAN_LIB::OpenVDB_libopenvdb IMPORTED_GLOBAL)
+        if (NOT OPENVDB_IMPORT_STATUS)
+            set_target_properties(CONAN_LIB::OpenVDB_libopenvdb PROPERTIES IMPORTED_GLOBAL TRUE)
+        endif()
+        add_library(OpenVDB::openvdb ALIAS CONAN_LIB::OpenVDB_libopenvdb)
+        # set(ZS_ENABLE_OPENVDB OFF)
     endif()
 endif(ZS_ENABLE_OPENVDB)
 
