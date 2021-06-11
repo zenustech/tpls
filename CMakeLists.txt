@@ -114,10 +114,12 @@ endif()
 add_subdirectory(partio EXCLUDE_FROM_ALL)
 add_dependencies(zsproj_deps zspartio)
 target_link_libraries(zsproj_deps INTERFACE zspartio)
+#[=[
 target_include_directories(zsproj_deps
     INTERFACE   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/zensim/tpls/partio>
                 $<INSTALL_INTERFACE:include/zensim/tpls/partio>
 )
+#]=]
 
 # fmt
 target_compile_definitions(zsproj_deps INTERFACE FMT_HEADER_ONLY)
