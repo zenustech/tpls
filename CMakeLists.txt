@@ -19,6 +19,10 @@ target_include_directories(zsproj_deps INTERFACE
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/>
 )
 
+if (MSVC)
+    target_compile_definitions(zsproj_deps INTERFACE NOMINMAX)
+endif()
+
 # opengl
 if (ZS_ENABLE_OPENGL)
     find_package(OpenGL)
@@ -36,14 +40,13 @@ endif(ZS_ENABLE_OPENGL)
 
 # openvdb
 if (ZS_ENABLE_OPENVDB)
-    list(APPEND CMAKE_MODULE_PATH /usr/local/lib/cmake/OpenVDB/)
     find_package(OpenVDB)
     if (TARGET OpenVDB::openvdb)
         get_target_property(OPENVDB_IMPORT_STATUS OpenVDB::openvdb IMPORTED_GLOBAL)
         if (NOT OPENVDB_IMPORT_STATUS)
             set_target_properties(OpenVDB::openvdb PROPERTIES IMPORTED_GLOBAL TRUE)
         endif()
-        # target_link_libraries(zsproj_deps INTERFACE OpenVDB::openvdb)
+        # target_link_libraries(zsopenvdb INTERFACE OpenVDB::openvdb)
     else()
         include(CMake/conan.cmake)
         conan_cmake_configure(REQUIRES openvdb/8.0.1
@@ -53,12 +56,17 @@ if (ZS_ENABLE_OPENVDB)
                             BUILD missing
                             REMOTE conan-center
                             SETTINGS ${settings})
+        list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
         find_package(OpenVDB REQUIRED)
         get_target_property(OPENVDB_IMPORT_STATUS CONAN_LIB::OpenVDB_libopenvdb IMPORTED_GLOBAL)
         if (NOT OPENVDB_IMPORT_STATUS)
             set_target_properties(CONAN_LIB::OpenVDB_libopenvdb PROPERTIES IMPORTED_GLOBAL TRUE)
         endif()
+        # not sure why this is required
+        target_include_directories(CONAN_LIB::OpenVDB_libopenvdb INTERFACE ${OpenVDB_INCLUDE_DIR})
         add_library(OpenVDB::openvdb ALIAS CONAN_LIB::OpenVDB_libopenvdb)
+        # target_link_libraries(zsopenvdb INTERFACE CONAN_LIB::OpenVDB_libopenvdb)
+        # target_include_directories(zsopenvdb INTERFACE ${OpenVDB_INCLUDE_DIR})
         # set(ZS_ENABLE_OPENVDB OFF)
     endif()
 endif(ZS_ENABLE_OPENVDB)
@@ -70,6 +78,11 @@ if (ZS_ENABLE_CUDA)
         get_target_property(CUDA_IMPORT_STATUS CUDA::toolkit IMPORTED_GLOBAL)
         if (NOT CUDA_IMPORT_STATUS)
             set_target_properties(CUDA::toolkit PROPERTIES IMPORTED_GLOBAL TRUE)
+            set_target_properties(CUDA::cusolver PROPERTIES IMPORTED_GLOBAL TRUE)
+            set_target_properties(CUDA::cusparse PROPERTIES IMPORTED_GLOBAL TRUE)
+            set_target_properties(CUDA::cublas PROPERTIES IMPORTED_GLOBAL TRUE)
+            set_target_properties(CUDA::cuda_driver PROPERTIES IMPORTED_GLOBAL TRUE)
+            set_target_properties(CUDA::cudart PROPERTIES IMPORTED_GLOBAL TRUE)
         endif()
         target_link_libraries(zsproj_deps INTERFACE CUDA::cudart CUDA::cuda_driver CUDA::cublas CUDA::cusparse CUDA::cusolver CUDA::toolkit)
     else()
