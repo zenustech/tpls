@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
 
-project(ZSDEPS CXX)
-
 option(ZS_ENABLE_INSTALL "Enable install rule" OFF)
 option(ZS_ENABLE_OPENGL "Enable opengl" ON)
 option(ZS_ENABLE_OPENVDB "Enable openvdb" ON)
@@ -13,11 +11,7 @@ option(ZS_ENABLE_PARTIO "Enable partio" ON)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
 
-add_library(zsproj_deps INTERFACE)
-target_include_directories(zsproj_deps INTERFACE
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/>
-)
+add_library(zsproj_deps INTERFACE IMPORTED)
 
 if (MSVC)
     target_compile_definitions(zsproj_deps INTERFACE NOMINMAX)
@@ -140,64 +134,24 @@ target_include_directories(zsproj_deps
 
 # fmt
 target_compile_definitions(zsproj_deps INTERFACE FMT_HEADER_ONLY)
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/fmt/>
-    $<INSTALL_INTERFACE:include/zensim/tpls/fmt/>
-)
 
 # spdlog
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/spdlog/>
-    $<INSTALL_INTERFACE:include/zensim/tpls/spdlog/>
-)
 
 # Catch2
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/catch2/>
-    $<INSTALL_INTERFACE:include/zensim/tpls/catch2/>
-)
 
 # gcem
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/gcem/>
-    $<INSTALL_INTERFACE:include/zensim/tpls/gcem/>
-)
 
 # function_ref
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/function_ref/>
-    $<INSTALL_INTERFACE:include/zensim/tpls/function_ref/>
-)
 
 # glm
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/glm/>
-    $<INSTALL_INTERFACE:include/zensim/tpls/glm/>
-)
 
 # jitify
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/jitify/>
-    $<INSTALL_INTERFACE:include/zensim/tpls/jitify/>
-)
 
 # rapidjson
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/rapidjson>
-    $<INSTALL_INTERFACE:include/zensim/tpls/rapidjson>
-)
 
 # cxxopts
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/cxxopts>
-    $<INSTALL_INTERFACE:include/zensim/tpls/cxxopts>
-)
 
 # magic_enum
-target_include_directories(zsproj_deps INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/magic_enum>
-    $<INSTALL_INTERFACE:include/zensim/tpls/magic_enum>
-)
 
 #[=[=
 the above are all header-only third-party dependency libraries
