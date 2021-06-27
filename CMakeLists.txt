@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
 
 option(ZS_ENABLE_INSTALL "Enable install rule" OFF)
-option(ZS_ENABLE_OPENGL "Enable opengl" ON)
-option(ZS_ENABLE_OPENVDB "Enable openvdb" ON)
+option(ZS_ENABLE_OPENGL "Enable opengl" OFF)
+option(ZS_ENABLE_OPENVDB "Enable openvdb" OFF)
 option(ZS_ENABLE_CUDA "Enable cuda" ON)
 option(ZS_ENABLE_OPENMP "Enable openmp" ON)
 option(ZS_ENABLE_PTHREADS "Enable pthreads" ON)
@@ -11,11 +11,7 @@ option(ZS_ENABLE_PARTIO "Enable partio" ON)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
 
-add_library(zsproj_deps INTERFACE IMPORTED)
-
-if (MSVC)
-    target_compile_definitions(zsproj_deps INTERFACE NOMINMAX)
-endif()
+# add_library(zsproj_deps INTERFACE IMPORTED)
 
 # opengl
 if (ZS_ENABLE_OPENGL)
@@ -106,7 +102,6 @@ if (ZS_ENABLE_OPENMP)
 endif(ZS_ENABLE_OPENMP)
 
 # threads
-if(UNIX)
 if (ZS_ENABLE_PTHREADS)
   find_package(Threads)
   if (NOT TARGET Threads::Threads)
@@ -118,7 +113,6 @@ if (ZS_ENABLE_PTHREADS)
   endif()
   target_link_libraries(zsproj_deps INTERFACE Threads::Threads)
 endif(ZS_ENABLE_PTHREADS)
-endif()
 
 # tpl that needs compilation
 # partio
