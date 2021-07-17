@@ -92,18 +92,19 @@ target_include_directories(zsproj_deps
 )
 #]=]
 
+# loguru
+add_subdirectory(loguru EXCLUDE_FROM_ALL)
+add_dependencies(zsproj_deps zsloguru)
+target_link_libraries(zsproj_deps INTERFACE zsloguru)
+
 # fmt
 target_compile_definitions(zsproj_deps INTERFACE FMT_HEADER_ONLY)
-
-# spdlog
 
 # Catch2
 
 # gcem
 
 # function_ref
-
-# glm
 
 # jitify
 

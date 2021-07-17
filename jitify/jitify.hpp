@@ -554,7 +554,7 @@ inline bool load_source(
     std::string filename, std::map<std::string, std::string>& sources,
     std::string current_dir = "",
     std::vector<std::string> include_paths = std::vector<std::string>(),
-    file_callback_type file_callback = 0, std::string* program_name = nullptr,
+    file_callback_type file_callback = 0,
     std::map<std::string, std::string>* fullpaths = nullptr,
     bool search_current_dir = true) {
   std::istream* source_stream = 0;
@@ -567,9 +567,6 @@ inline bool load_source(
     filename = filename.substr(0, newline_pos);
     string_stream << source;
     source_stream = &string_stream;
-  }
-  if (program_name) {
-    *program_name = filename;
   }
   if (sources.count(filename)) {
     // Already got this one
@@ -668,18 +665,16 @@ inline bool load_source(
     }
 
     // HACK WAR for Thrust using "#define FOO #pragma bar"
-    // TODO: This is not robust to block comments, line continuations, or tabs.
     size_t pragma_beg = cleanline.find("#pragma ");
     if (pragma_beg != std::string::npos) {
-      std::string line_after_pragma = line.substr(pragma_beg + 8);
-      // TODO: Handle block comments (currently they cause a compilation error).
-      size_t comment_start = line_after_pragma.find("//");
-      std::string pragma_args = line_after_pragma.substr(0, comment_start);
-      std::string comment = comment_start != std::string::npos
-                                ? line_after_pragma.substr(comment_start)
-                                : "";
-      line = line.substr(0, pragma_beg) + "_Pragma(\"" + pragma_args + "\")" +
-             comment;
+      std::string line_after_pragma = line.substr(pragma_beg);
+      std::vector<std::string> pragma_split =
+          split_string(line_after_pragma, 2);
+      line =
+          (line.substr(0, pragma_beg) + "_Pragma(\"" + pragma_split[1] + "\")");
+      if (pragma_split.size() == 3) {
+        line += " " + pragma_split[2];
+      }
     }
 
     source += line + "\n";
@@ -979,7 +974,7 @@ inline Type<T> type_of(T&) {
  *  \param value The const value whose type is to be captured.
  */
 template <typename T>
-inline Type<T const> type_of(T const&) {
+inline Type<T const> type_of(T const& value) {
   return Type<T const>();
 }
 
@@ -1376,6 +1371,9 @@ static const char* jitsafe_header_preinclude_h = R"(
 //// WAR for Thrust (which appear to have forgotten to include this in error_code.h)
 //#include <string>
 
+// WAR for Thrust (which only supports gnuc, clang or msvc)
+#define __GNUC__ 4
+
 // WAR for generics/shfl.h
 #define THRUST_STATIC_ASSERT(x)
 
@@ -1406,12 +1404,12 @@ static const char* jitsafe_header_float_h = R"(
 #define DBL_MAX_EXP     1024
 #define FLT_MAX_10_EXP  38
 #define DBL_MAX_10_EXP  308
-#define FLT_MAX         3.4028234e38f
-#define DBL_MAX         1.7976931348623157e308
-#define FLT_EPSILON     1.19209289e-7f
-#define DBL_EPSILON     2.220440492503130e-16
-#define FLT_MIN         1.1754943e-38f
-#define DBL_MIN         2.2250738585072013e-308
+#define FLT_MAX         3.4028234e38f 
+#define DBL_MAX         1.7976931348623157e308 
+#define FLT_EPSILON     1.19209289e-7f 
+#define DBL_EPSILON     2.220440492503130e-16 
+#define FLT_MIN         1.1754943e-38f; 
+#define DBL_MIN         2.2250738585072013e-308 
 #define FLT_ROUNDS      1
 #if defined __cplusplus && __cplusplus >= 201103L
 #define FLT_EVAL_METHOD 0
@@ -2718,9 +2716,10 @@ inline void load_program(std::string const& cuda_source,
 
   // Load program source
   if (!detail::load_source(cuda_source, *program_sources, "", *include_paths,
-                           file_callback, program_name)) {
+                           file_callback)) {
     throw std::runtime_error("Source not found: " + cuda_source);
   }
+  *program_name = program_sources->begin()->first;
 
   // Maps header include names to their full file paths.
   std::map<std::string, std::string> header_fullpaths;
@@ -2728,7 +2727,7 @@ inline void load_program(std::string const& cuda_source,
   // Load header sources
   for (std::string const& header : headers) {
     if (!detail::load_source(header, *program_sources, "", *include_paths,
-                             file_callback, nullptr, &header_fullpaths)) {
+                             file_callback, &header_fullpaths)) {
       // **TODO: Deal with source not found
       throw std::runtime_error("Source not found: " + header);
     }
@@ -2787,8 +2786,8 @@ inline void load_program(std::string const& cuda_source,
     std::string include_parent_fullpath = header_fullpaths[include_parent];
     std::string include_path = detail::path_base(include_parent_fullpath);
     if (detail::load_source(include_name, *program_sources, include_path,
-                            *include_paths, file_callback, nullptr,
-                            &header_fullpaths, is_included_with_quotes)) {
+                            *include_paths, file_callback, &header_fullpaths,
+                            is_included_with_quotes)) {
 #if JITIFY_PRINT_HEADER_PATHS
       std::cout << "Found #include " << include_name << " from "
                 << include_parent << ":" << line_num << " ["
