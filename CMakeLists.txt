@@ -23,6 +23,7 @@ if (ZS_ENABLE_OPENGL)
         # message(FATAL_ERROR "OpenGL not found!")
     endif()
 endif(ZS_ENABLE_OPENGL)
+set(ZS_ENABLE_OPENGL ${ZS_ENABLE_OPENGL} PARENT_SCOPE)
 
 # cuda
 if (ZS_ENABLE_CUDA)
@@ -35,6 +36,7 @@ if (ZS_ENABLE_CUDA)
         set(ZS_ENABLE_CUDA OFF)
     endif()
 endif(ZS_ENABLE_CUDA)
+set(ZS_ENABLE_CUDA ${ZS_ENABLE_CUDA} PARENT_SCOPE)
 
 # threads
 if (ZS_ENABLE_PTHREADS)
@@ -44,6 +46,7 @@ if (ZS_ENABLE_PTHREADS)
   endif()
   target_link_libraries(zsproj_deps INTERFACE Threads::Threads)
 endif(ZS_ENABLE_PTHREADS)
+set(ZS_ENABLE_PTHREADS ${ZS_ENABLE_PTHREADS} PARENT_SCOPE)
 
 # openmp
 if (ZS_ENABLE_OPENMP)
@@ -58,6 +61,7 @@ if (ZS_ENABLE_OPENMP)
         # message(FATAL_ERROR "OpenMP not found!")
     endif()
 endif(ZS_ENABLE_OPENMP)
+set(ZS_ENABLE_OPENMP ${ZS_ENABLE_OPENMP} PARENT_SCOPE)
 
 # openvdb
 if (ZS_ENABLE_OPENVDB)
@@ -81,6 +85,7 @@ if (ZS_ENABLE_OPENVDB)
         # set(ZS_ENABLE_OPENVDB OFF)
     endif()
 endif(ZS_ENABLE_OPENVDB)
+set(ZS_ENABLE_OPENVDB ${ZS_ENABLE_OPENVDB} PARENT_SCOPE)
 
 # tpl that needs compilation
 # partio
