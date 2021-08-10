@@ -70,19 +70,7 @@ if (ZS_ENABLE_OPENVDB)
     if (TARGET OpenVDB::openvdb)
         target_link_libraries(zsopenvdb INTERFACE OpenVDB::openvdb)
     else()
-        include(CMake/conan.cmake)
-        conan_cmake_configure(REQUIRES openvdb/8.0.1
-                            GENERATORS cmake_find_package)
-        conan_cmake_autodetect(settings)
-        conan_cmake_install(PATH_OR_REFERENCE .
-                            BUILD missing
-                            REMOTE conan-center
-                            SETTINGS ${settings})
-        list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
-# https://approvaltestscpp.readthedocs.io/en/latest/generated_docs/ConanIntegration.html
-        find_package(OpenVDB REQUIRED)
-        target_link_libraries(zsopenvdb INTERFACE OpenVDB::OpenVDB)
-        # set(ZS_ENABLE_OPENVDB OFF)
+        set(ZS_ENABLE_OPENVDB OFF)
     endif()
 endif(ZS_ENABLE_OPENVDB)
 set(ZS_ENABLE_OPENVDB ${ZS_ENABLE_OPENVDB} PARENT_SCOPE)
@@ -92,6 +80,7 @@ set(ZS_ENABLE_OPENVDB ${ZS_ENABLE_OPENVDB} PARENT_SCOPE)
 if (ZS_ENABLE_PARTIO)
     add_subdirectory(partio EXCLUDE_FROM_ALL)
 endif(ZS_ENABLE_PARTIO)
+set(ZS_ENABLE_PARTIO ${ZS_ENABLE_PARTIO} PARENT_SCOPE)
 # loguru
 add_subdirectory(loguru EXCLUDE_FROM_ALL)
 add_dependencies(zsproj_deps zsloguru)
