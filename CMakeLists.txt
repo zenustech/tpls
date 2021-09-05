@@ -70,15 +70,27 @@ if (ZS_ENABLE_SYCL_DPCPP)
     add_library(zpc_sycl_deps INTERFACE)
     target_compile_features(zpc_sycl_deps INTERFACE cxx_std_17)
     target_link_libraries(zpc_sycl_deps INTERFACE sycl)
-    #target_link_options(zpc_sycl_deps INTERFACE -rpath)
-    #target_compile_options(zpc_sycl_deps INTERFACE --cuda)
   else()
     set(ZS_ENABLE_SYCL_DPCPP OFF)
   endif()
 endif(ZS_ENABLE_SYCL_DPCPP)
 set(ZS_ENABLE_SYCL_DPCPP ${ZS_ENABLE_SYCL_DPCPP} PARENT_SCOPE)
 
-# opencl-cuda
+# sycl-clang
+if (ZS_ENABLE_SYCL)
+  if (${CMAKE_CXX_COMPILER_ID} MATCHES ".*Clang")
+    add_library(zpc_sycl_deps INTERFACE)
+    target_compile_features(zpc_sycl_deps INTERFACE cxx_std_17)
+    target_compile_options(zpc_sycl_deps INTERFACE 
+        $<$<COMPILE_LANGUAGE:CXX>: -fsycl -fsycl-targets=nvptx64>
+    )
+  else()
+    set(ZS_ENABLE_SYCL OFF)
+  endif()
+endif(ZS_ENABLE_SYCL)
+set(ZS_ENABLE_SYCL ${ZS_ENABLE_SYCL} PARENT_SCOPE)
+
+# opencl
 if (ZS_ENABLE_OPENCL)
     find_package(OpenCL)
     if (OpenCL_FOUND)
