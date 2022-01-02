@@ -150,10 +150,9 @@ if (ZS_ENABLE_PARTIO)
     add_subdirectory(partio EXCLUDE_FROM_ALL)
 endif(ZS_ENABLE_PARTIO)
 set(ZS_ENABLE_PARTIO ${ZS_ENABLE_PARTIO} PARENT_SCOPE)
-# loguru
-add_subdirectory(loguru EXCLUDE_FROM_ALL)
-add_dependencies(zsproj_deps zsloguru)
-target_link_libraries(zsproj_deps INTERFACE zsloguru)
+
+# plog
+target_include_directories(zsproj_deps INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # other local tpls
 # fmt
