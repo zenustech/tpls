@@ -192,12 +192,7 @@ set(ZS_ENABLE_PARTIO ${ZS_ENABLE_PARTIO} PARENT_SCOPE)
 
 # mshio
 if (ZS_ENABLE_MSHIO)
-    if (ZS_BUILD_SHARED_LIBS)
-        set(PARTIO_BUILD_SHARED_LIBS ON)
-    else()
-        set(PARTIO_BUILD_SHARED_LIBS OFF)
-    endif()
-    if (TARGET mshio::mshio)
+    if (NOT TARGET mshio)
         set(MSHIO_PYTHON OFF)
         set(MSHIO_BUILD_TESTS OFF)
         set(MSHIO_BUILD_EXAMPLES OFF)
