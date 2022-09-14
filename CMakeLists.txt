@@ -209,7 +209,10 @@ endif(ZS_ENABLE_MSHIO)
 set(ZS_ENABLE_MSHIO ${ZS_ENABLE_MSHIO} PARENT_SCOPE)
 
 # plog
-target_include_directories(zsproj_deps INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(zsproj_deps INTERFACE 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 # other local tpls
 # fmt
