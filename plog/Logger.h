@@ -43,7 +43,7 @@ namespace plog
             return severity <= m_maxSeverity;
         }
 
-        virtual void write(const Record& record)
+        virtual void write(const Record& record) override
         {
             if (checkSeverity(record.getSeverity()))
             {
