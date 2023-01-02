@@ -12,6 +12,8 @@ option(ZS_ENABLE_PTHREADS "Enable pthreads" OFF)
 option(ZS_ENABLE_PARTIO "Enable partio" ON)
 option(ZS_ENABLE_MSHIO "Enable .msh file io" OFF)
 
+option(ZS_AUTO_DETECT_CUDA_ARCH "Let cmake automatically determine target cuda architecture" ON)
+
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -40,6 +42,77 @@ if(ZS_ENABLE_CUDA)
 
     if(TARGET CUDA::cuda_driver)
         add_library(zpc_cuda_deps INTERFACE)
+
+        if(NOT EXISTS ZS_CUDA_ARCH)
+            set(ZS_CUDA_ARCH 52)
+        endif()
+
+        # ref: https://gitlab.kitware.com/cmake/cmake/-/issues/19199
+        # ref: https://stackoverflow.com/questions/68223398/how-can-i-get-cmake-to-automatically-detect-the-value-for-cuda-architectures
+        # ref: https://gitlab.kitware.com/cmake/cmake/-/issues/22375
+        if(ZS_AUTO_DETECT_CUDA_ARCH)
+            # ref: Kokkos
+            # Try to autodetect the CUDA Compute Capability by asking the device
+            SET(_BINARY_TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/CMake/compile_tests/CUDAComputeCapabilityWorkdir)
+            FILE(REMOVE_RECURSE ${_BINARY_TEST_DIR})
+            FILE(MAKE_DIRECTORY ${_BINARY_TEST_DIR})
+
+            TRY_RUN(
+                _RESULT
+                _COMPILE_RESULT
+                ${_BINARY_TEST_DIR}
+                ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/cuda_compute_capability.cc
+                RUN_OUTPUT_VARIABLE _CUDA_COMPUTE_CAPABILITY)
+
+            IF(NOT _COMPILE_RESULT OR NOT _RESULT EQUAL 0)
+                # check to see if CUDA is not already enabled (may happen when Kokkos is subproject)
+                GET_PROPERTY(_ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
+
+                IF(NOT "CUDA" IN_LIST _ENABLED_LANGUAGES)
+                    MESSAGE(STATUS "CUDA auto-detection of architecture failed with ${CMAKE_CXX_COMPILER}. Enabling CUDA language ONLY to auto-detect architecture...")
+                    INCLUDE(CheckLanguage)
+                    CHECK_LANGUAGE(CUDA)
+
+                    IF(CMAKE_CUDA_COMPILER)
+                        ENABLE_LANGUAGE(CUDA)
+                    ELSE()
+                        MESSAGE(STATUS "CUDA language could not be enabled")
+                    ENDIF()
+                ENDIF()
+            ENDIF()
+
+            if(CMAKE_CUDA_COMPILER)
+                CONFIGURE_FILE(
+                    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/cuda_compute_capability.cc
+                    ${PROJECT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
+                    COPYONLY
+                )
+
+                set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/cuda_compute_capability.cc PROPERTIES LANGUAGE CUDA)
+
+                set(CMAKE_CUDA_ARCHITECTURES OFF)
+                TRY_RUN(
+                    _RESULT
+                    _COMPILE_RESULT
+                    ${_BINARY_TEST_DIR}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/cuda_compute_capability.cu
+                    RUN_OUTPUT_VARIABLE _CUDA_ARCH
+                )
+                message(STATUS "deduced cuda arch: ${_CUDA_ARCH}")
+
+                set(ZS_CUDA_ARCH ${_CUDA_ARCH})
+                target_compile_options(zpc_cuda_deps
+                    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-arch=sm_${ZS_CUDA_ARCH}>
+                )
+                target_link_options(zpc_cuda_deps
+                    INTERFACE $<DEVICE_LINK:-arch=sm_${ZS_CUDA_ARCH}> # -dlto -dlink
+                )
+            endif()
+        endif(ZS_AUTO_DETECT_CUDA_ARCH)
+
+        set(CMAKE_CUDA_ARCHITECTURES ${CMAKE_CUDA_ARCHITECTURES} PARENT_SCOPE)
+        set(ZS_CUDA_ARCH ${ZS_CUDA_ARCH} PARENT_SCOPE)
+
         target_link_libraries(zpc_deps INTERFACE zpc_cuda_deps)
         target_compile_features(zpc_cuda_deps INTERFACE cuda_std_17)
         target_link_libraries(zpc_cuda_deps INTERFACE CUDA::cuda_driver CUDA::nvrtc cudadevrt)
