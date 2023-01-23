@@ -12,7 +12,10 @@ option(ZS_ENABLE_PTHREADS "Enable pthreads" OFF)
 option(ZS_ENABLE_PARTIO "Enable partio" ON)
 option(ZS_ENABLE_MSHIO "Enable .msh file io" OFF)
 
-option(ZS_AUTO_DETECT_CUDA_ARCH "Let cmake automatically determine target cuda architecture" ON)
+# CUDA
+option(ZS_AUTO_DETECT_CUDA_ARCH "Let cmake determine target cuda architecture" ON)
+# APPLE
+option(USE_MACPORTS "Use MacPorts packages" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_BINARY_DIR})
@@ -223,6 +226,45 @@ set(ZS_ENABLE_PTHREADS ${ZS_ENABLE_PTHREADS} PARENT_SCOPE)
 
 # openmp
 if(ZS_ENABLE_OPENMP)
+    # ref: https://gitlab.com/palisade/palisade-development/-/blob/master/CMakeLists.txt
+    if (APPLE)
+        if (USE_MACPORTS)
+            set(OPENMP_LIBRARIES "/opt/local/lib/libomp")
+            set(OPENMP_INCLUDES "/opt/local/include/libomp")
+            if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "AppleClang")
+                set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -lomp -Wno-unused-command-line-argument")
+                set(OpenMP_C_LIB_NAMES "omp")
+                set(OpenMP_omp_LIBRARY ${OpenMP_C_LIB_NAMES})
+            endif()
+            if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+                set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -lomp -Wno-unused-command-line-argument")
+                set(OpenMP_CXX_LIB_NAMES "omp")
+                set(OpenMP_omp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
+            endif()
+        else(USE_MACPORTS)
+            if (${ARCHITECTURE} MATCHES "arm64")
+                message( STATUS "Apple M1 detected")
+                set(OPENMP_LIBRARIES "/opt/homebrew/opt/libomp/lib")
+                set(OPENMP_INCLUDES "/opt/homebrew/opt/libomp/include")
+            else() # Apple Intel Processor
+                message( STATUS "Apple Intel detected")
+                set(OPENMP_LIBRARIES "/usr/local/opt/libomp/lib")
+                set(OPENMP_INCLUDES "/usr/local/opt/libomp/include")
+            endif()
+
+            if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+                set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -lomp -Wno-unused-command-line-argument")
+                set(OpenMP_C_LIB_NAMES "libomp")
+                set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+            endif()
+            if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+                set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -lomp -Wno-unused-command-line-argument")
+                set(OpenMP_CXX_LIB_NAMES "libomp")
+                set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
+            endif()
+        endif(USE_MACPORTS)
+    endif(APPLE)
+
     find_package(OpenMP)
 
     if(TARGET OpenMP::OpenMP_CXX)
@@ -232,6 +274,10 @@ if(ZS_ENABLE_OPENMP)
         # https://gitlab.kitware.com/cmake/cmake/-/issues/17256
         # this target already imported in zen
         target_link_libraries(zpc_omp_deps INTERFACE OpenMP::OpenMP_CXX)
+        if (APPLE)
+            target_link_directories(zpc_omp_deps INTERFACE ${OPENMP_LIBRARIES})
+            target_include_directories(zpc_omp_deps INTERFACE ${OPENMP_INCLUDES})
+        endif(APPLE)
     else()
         set(ZS_ENABLE_OPENMP OFF)
 
