@@ -327,6 +327,14 @@ endif(ZS_ENABLE_OPENVDB)
 set(ZS_ENABLE_OPENVDB ${ZS_ENABLE_OPENVDB} PARENT_SCOPE)
 
 # tpl that needs compilation
+# whereami
+if(ZS_BUILD_SHARED_LIBS)
+    set(WHEREAMI_BUILD_SHARED_LIBS ON)
+else()
+    set(WHEREAMI_BUILD_SHARED_LIBS OFF)
+endif()
+add_subdirectory(whereami EXCLUDE_FROM_ALL)
+
 # partio
 if(ZS_ENABLE_PARTIO)
     if(ZS_BUILD_SHARED_LIBS)
