@@ -118,7 +118,7 @@ if(ZS_ENABLE_CUDA)
 
         target_link_libraries(zpc_deps INTERFACE zpc_cuda_deps)
         target_compile_features(zpc_cuda_deps INTERFACE cuda_std_17)
-        target_link_libraries(zpc_cuda_deps INTERFACE CUDA::cuda_driver CUDA::nvrtc cudadevrt)
+        target_link_libraries(zpc_cuda_deps INTERFACE CUDA::cuda_driver CUDA::nvrtc cudadevrt CUDA::nvptxcompiler_static)
 
         # CUDA::cublas CUDA::cusparse CUDA::cusolver CUDA::cufft
         if(ZS_BUILD_SHARED_LIBS)
