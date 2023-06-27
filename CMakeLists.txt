@@ -118,7 +118,11 @@ if(ZS_ENABLE_CUDA)
 
         target_link_libraries(zpc_deps INTERFACE zpc_cuda_deps)
         target_compile_features(zpc_cuda_deps INTERFACE cuda_std_17)
-        target_link_libraries(zpc_cuda_deps INTERFACE CUDA::cuda_driver CUDA::nvrtc cudadevrt CUDA::nvptxcompiler_static)
+        target_link_libraries(zpc_cuda_deps INTERFACE CUDA::cuda_driver CUDA::nvrtc cudadevrt)
+        find_package(Threads)
+        if (Threads_FOUND)
+            target_link_libraries(zpc_cuda_deps INTERFACE Threads::Threads CUDA::nvptxcompiler_static)
+        endif(Threads_FOUND)
 
         # CUDA::cublas CUDA::cusparse CUDA::cusolver CUDA::cufft
         if(ZS_BUILD_SHARED_LIBS)
