@@ -8,6 +8,7 @@ option(ZS_ENABLE_SYCL_COMPUTECPP "Enable sycl[computecpp]" OFF)
 option(ZS_ENABLE_SYCL_DPCPP "Enable SYCL[Intel-DPC++] backend" OFF)
 option(ZS_ENABLE_OPENCL "Enable OpenCL backend" OFF)
 option(ZS_ENABLE_OPENMP "Enable openmp" OFF)
+option(ZS_ENABLE_JIT "Enable JIT module" OFF)
 option(ZS_ENABLE_PTHREADS "Enable pthreads" OFF)
 option(ZS_ENABLE_PARTIO "Enable partio" ON)
 option(ZS_ENABLE_MSHIO "Enable .msh file io" OFF)
@@ -132,6 +133,43 @@ if(ZS_ENABLE_CUDA)
 endif(ZS_ENABLE_CUDA)
 
 set(ZS_ENABLE_CUDA ${ZS_ENABLE_CUDA} PARENT_SCOPE)
+
+# JIT
+add_library(zpc_jit_deps INTERFACE)
+if(ZS_ENABLE_JIT)
+    find_package(LLVM 15 CONFIG)
+    if (LLVM_FOUND)
+        message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+        message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+        message(STATUS "llvm inc dir: ${LLVM_INCLUDE_DIRS}")
+
+        find_package(Clang CONFIG HINTS "${LLVM_DIR}/../clang" "${LLVM_DIR}/../lib/cmake/clang")
+        if (Clang_FOUND)
+            message(STATUS "Using ClangConfig.cmake in: ${Clang_DIR}")
+
+            target_compile_definitions(zpc_jit_deps INTERFACE 
+                $<BUILD_INTERFACE:${LLVM_DEFINITIONS_LIST}>)
+            target_include_directories(zpc_jit_deps INTERFACE 
+                $<$<COMPILE_LANGUAGE:CXX>:${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS}>)
+
+            set(CLANG_LIBS 
+                clangBasic clangAPINotes clangLex clangParse clangAST clangDynamicASTMatchers clangASTMatchers clangCrossTU clangSema clangCodeGen clangAnalysis clangAnalysisFlowSensitive clangAnalysisFlowSensitiveModels clangEdit clangExtractAPI clangRewrite clangARCMigrate clangDriver clangSerialization clangRewriteFrontend clangFrontend clangFrontendTool clangToolingCore clangToolingInclusions clangToolingRefactoring clangToolingASTDiff clangToolingSyntax clangDependencyScanning clangTransformer clangTooling clangDirectoryWatcher clangIndex clangIndexSerialization clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangStaticAnalyzerFrontend clangFormat clangInterpreter clangHandleCXX clangHandleLLVM)
+            
+            message(STATUS "llvm libs: ${LLVM_AVAILABLE_LIBS}")
+            message(STATUS "clang libs: ${CLANG_LIBS}")
+
+            target_link_libraries(zpc_jit_deps INTERFACE 
+                zpc_cxx_deps ${LLVM_AVAILABLE_LIBS} ${CLANG_LIBS})
+
+        else(Clang_FOUND)
+            set(ZS_ENABLE_JIT OFF)
+        endif(Clang_FOUND)
+    else(LLVM_FOUND)
+        set(ZS_ENABLE_JIT OFF)
+    endif(LLVM_FOUND)
+endif(ZS_ENABLE_JIT)
+
+set(ZS_ENABLE_JIT ${ZS_ENABLE_JIT} PARENT_SCOPE)
 
 # sycl-computecpp
 if(ZS_ENABLE_SYCL_COMPUTECPP)
