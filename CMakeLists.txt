@@ -146,6 +146,7 @@ if(ZS_ENABLE_JIT)
         find_package(Clang CONFIG HINTS "${LLVM_DIR}/../clang" "${LLVM_DIR}/../lib/cmake/clang")
         if (Clang_FOUND)
             message(STATUS "Using ClangConfig.cmake in: ${Clang_DIR}")
+            message(STATUS "clang inc dir: ${CLANG_INCLUDE_DIRS}")
 
             target_compile_definitions(zpc_jit_deps INTERFACE 
                 $<BUILD_INTERFACE:${LLVM_DEFINITIONS_LIST}>)
