@@ -105,11 +105,12 @@ if(ZS_ENABLE_CUDA)
                 message(STATUS "deduced cuda arch: ${_CUDA_ARCH}")
 
                 set(ZS_CUDA_ARCH ${_CUDA_ARCH})
+                # ref: https://zhengqm.github.io/blog/2018/12/07/cuda-nvcc-tips.html
                 target_compile_options(zpc_cuda_deps
-                    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-arch=sm_${ZS_CUDA_ARCH}>
+                    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-arch=compute_${ZS_CUDA_ARCH} -code=sm_${ZS_CUDA_ARCH}>
                 )
                 target_link_options(zpc_cuda_deps
-                    INTERFACE $<DEVICE_LINK:-arch=sm_${ZS_CUDA_ARCH}> # -dlto -dlink
+                    INTERFACE $<DEVICE_LINK:-arch=compute_${ZS_CUDA_ARCH} -code=sm_${ZS_CUDA_ARCH}> # -dlto -dlink
                 )
             endif()
         endif(ZS_AUTO_DETECT_CUDA_ARCH)
