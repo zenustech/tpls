@@ -4,6 +4,7 @@ option(ZS_ENABLE_INSTALL "Enable install rule" OFF)
 option(ZS_ENABLE_OPENGL "Enable opengl" OFF)
 option(ZS_ENABLE_OPENVDB "Enable openvdb" OFF)
 option(ZS_ENABLE_CUDA "Enable cuda" OFF)
+option(ZS_ENABLE_VULKAN "Enable vulkan backend" OFF)
 option(ZS_ENABLE_SYCL_COMPUTECPP "Enable sycl[computecpp]" OFF)
 option(ZS_ENABLE_SYCL_DPCPP "Enable SYCL[Intel-DPC++] backend" OFF)
 option(ZS_ENABLE_OPENCL "Enable OpenCL backend" OFF)
@@ -23,6 +24,7 @@ list(APPEND CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_CURRENT_SOURCE
 
 add_library(zpc_deps INTERFACE)
 add_library(zsproj_deps INTERFACE)
+add_library(zpc_jit_deps INTERFACE)
 target_link_libraries(zpc_deps INTERFACE zsproj_deps)
 
 # opengl
@@ -135,8 +137,27 @@ endif(ZS_ENABLE_CUDA)
 
 set(ZS_ENABLE_CUDA ${ZS_ENABLE_CUDA} PARENT_SCOPE)
 
+# vulkan
+if(ZS_ENABLE_VULKAN)
+  find_package(Vulkan QUIET)
+
+  if(Vulkan_FOUND)
+    message("-- vulkan libraries" ${Vulkan_LIBRARIES})
+    message("-- vulkan include directory" ${Vulkan_INCLUDE_DIRS})
+    message("-- vulkan components" ${Vulkan_FIND_COMPONENTS})
+    target_link_libraries(zsproj_deps INTERFACE Vulkan::Vulkan)
+    if(APPLE)
+        target_link_libraries(zsproj_deps INTERFACE Vulkan::MoltenVK)
+    endif(APPLE)
+  else()
+    message(STATUS "Vulkan not found!")
+    set(ZS_ENABLE_VULKAN OFF)
+  endif()
+endif(ZS_ENABLE_VULKAN)
+
+set(ZS_ENABLE_VULKAN ${ZS_ENABLE_VULKAN} PARENT_SCOPE)
+
 # JIT
-add_library(zpc_jit_deps INTERFACE)
 if(ZS_ENABLE_JIT)
     find_package(LLVM 15 CONFIG)
     if (LLVM_FOUND)
