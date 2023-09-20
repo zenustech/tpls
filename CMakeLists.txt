@@ -146,6 +146,11 @@ if(ZS_ENABLE_VULKAN)
     message("-- vulkan include directory" ${Vulkan_INCLUDE_DIRS})
     message("-- vulkan components" ${Vulkan_FIND_COMPONENTS})
     target_link_libraries(zsproj_deps INTERFACE Vulkan::Vulkan)
+    # a not so elegant way of gaining access to other vulkan libs
+    get_filename_component(ZS_VULKAN_LINK_DIRECTORY ${Vulkan_LIBRARIES} DIRECTORY)
+    message("-- (deduced) vulkan library directory: ${ZS_VULKAN_LINK_DIRECTORY}")
+    target_link_directories(zsproj_deps INTERFACE ${ZS_VULKAN_LINK_DIRECTORY})
+
     if(APPLE)
         target_link_libraries(zsproj_deps INTERFACE Vulkan::MoltenVK)
     endif(APPLE)
