@@ -150,6 +150,7 @@ if(ZS_ENABLE_VULKAN)
     get_filename_component(ZS_VULKAN_LINK_DIRECTORY ${Vulkan_LIBRARIES} DIRECTORY)
     message("-- (deduced) vulkan library directory: ${ZS_VULKAN_LINK_DIRECTORY}")
     target_link_directories(zsproj_deps INTERFACE ${ZS_VULKAN_LINK_DIRECTORY})
+    target_link_libraries(zsproj_deps INTERFACE shaderc_combined spirv-cross-glsl spirv-cross-core spirv-cross-cpp)
 
     if(APPLE)
         target_link_libraries(zsproj_deps INTERFACE Vulkan::MoltenVK)
