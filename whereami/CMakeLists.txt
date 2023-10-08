@@ -8,7 +8,7 @@ else()
     set(WHEREAMI_LIBRARY_TYPE STATIC)
 endif()
 
-add_library(zswhereami ${PARTIO_LIBRARY_TYPE} ${PROJECT_SOURCE_DIR}/whereami.c)
+add_library(zswhereami ${WHEREAMI_LIBRARY_TYPE} ${PROJECT_SOURCE_DIR}/whereami.c)
 set_target_properties(zswhereami PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_features(zswhereami PRIVATE cxx_std_14)
 set_target_properties(zswhereami PROPERTIES OUTPUT_NAME zswhereami POSITION_INDEPENDENT_CODE ON)
