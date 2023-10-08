@@ -96,7 +96,7 @@ if(ZS_ENABLE_CUDA)
 
                 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/cuda_compute_capability.cc PROPERTIES LANGUAGE CUDA)
 
-                set(CMAKE_CUDA_ARCHITECTURES OFF)
+                set(CMAKE_CUDA_ARCHITECTURES OFF)   # this may be questionable
                 TRY_RUN(
                     _RESULT
                     _COMPILE_RESULT
@@ -396,22 +396,26 @@ set(ZS_ENABLE_OPENVDB ${ZS_ENABLE_OPENVDB} PARENT_SCOPE)
 
 # tpl that needs compilation
 # whereami
-if(ZS_BUILD_SHARED_LIBS)
+if(NOT DEFINED WHEREAMI_BUILD_SHARED_LIBS)
+  if(ZS_BUILD_SHARED_LIBS)
     set(WHEREAMI_BUILD_SHARED_LIBS ON)
-else()
+  else(ZS_BUILD_SHARED_LIBS)
     set(WHEREAMI_BUILD_SHARED_LIBS OFF)
-endif()
+  endif(ZS_BUILD_SHARED_LIBS)
+endif(WHEREAMI_BUILD_SHARED_LIBS)
 add_subdirectory(whereami EXCLUDE_FROM_ALL)
 
 # partio
 if(ZS_ENABLE_PARTIO)
+  if(NOT DEFINED PARTIO_BUILD_SHARED_LIBS)
     if(ZS_BUILD_SHARED_LIBS)
         set(PARTIO_BUILD_SHARED_LIBS ON)
     else()
         set(PARTIO_BUILD_SHARED_LIBS OFF)
     endif()
+  endif(PARTIO_BUILD_SHARED_LIBS)
 
-    add_subdirectory(partio EXCLUDE_FROM_ALL)
+  add_subdirectory(partio EXCLUDE_FROM_ALL)
 endif(ZS_ENABLE_PARTIO)
 
 set(ZS_ENABLE_PARTIO ${ZS_ENABLE_PARTIO} PARENT_SCOPE)
