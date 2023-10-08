@@ -122,8 +122,11 @@ if(ZS_ENABLE_CUDA)
 
         target_link_libraries(zpc_deps INTERFACE zpc_cuda_deps)
         target_compile_features(zpc_cuda_deps INTERFACE cuda_std_17)
-        target_link_libraries(zpc_cuda_deps INTERFACE CUDA::cuda_driver CUDA::nvrtc)
+        target_link_libraries(zpc_cuda_deps INTERFACE CUDA::cuda_driver)
 
+        #if (TARGET CUDA::nvJitLink) # introduced in cuda 12
+        #    target_link_libraries(zpc_cuda_deps INTERFACE CUDA::nvJitLink)
+        #endif()
         # CUDA::cublas CUDA::cusparse CUDA::cusolver CUDA::cufft
         if(ZS_BUILD_SHARED_LIBS)
             target_link_libraries(zpc_cuda_deps INTERFACE CUDA::cudart)
@@ -177,19 +180,23 @@ if(ZS_ENABLE_JIT)
             message(STATUS "Using ClangConfig.cmake in: ${Clang_DIR}")
             message(STATUS "clang inc dir: ${CLANG_INCLUDE_DIRS}")
 
+            separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
             target_compile_definitions(zpc_jit_deps INTERFACE 
                 $<BUILD_INTERFACE:${LLVM_DEFINITIONS_LIST}>)
             target_include_directories(zpc_jit_deps INTERFACE 
                 $<$<COMPILE_LANGUAGE:CXX>:${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS}>)
 
+            llvm_map_components_to_libnames(llvm_libs support core irreader)
+
             set(CLANG_LIBS 
                 clangBasic clangAPINotes clangLex clangParse clangAST clangDynamicASTMatchers clangASTMatchers clangCrossTU clangSema clangCodeGen clangAnalysis clangAnalysisFlowSensitive clangAnalysisFlowSensitiveModels clangEdit clangExtractAPI clangRewrite clangARCMigrate clangDriver clangSerialization clangRewriteFrontend clangFrontend clangFrontendTool clangToolingCore clangToolingInclusions clangToolingRefactoring clangToolingASTDiff clangToolingSyntax clangDependencyScanning clangTransformer clangTooling clangDirectoryWatcher clangIndex clangIndexSerialization clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangStaticAnalyzerFrontend clangFormat clangInterpreter clangHandleCXX clangHandleLLVM)
             
-            message(STATUS "llvm libs: ${LLVM_AVAILABLE_LIBS}")
+            message(STATUS "available llvm libs: ${LLVM_AVAILABLE_LIBS}")
+            message(STATUS "required llvm libs: ${llvm_libs}")
             message(STATUS "clang libs: ${CLANG_LIBS}")
 
             target_link_libraries(zpc_jit_deps INTERFACE 
-                zpc_cxx_deps ${LLVM_AVAILABLE_LIBS} ${CLANG_LIBS})
+                zpc_cxx_deps ${llvm_libs} ${CLANG_LIBS})
 
         else(Clang_FOUND)
             set(ZS_ENABLE_JIT OFF)
