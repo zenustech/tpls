@@ -109,7 +109,7 @@ if(ZS_ENABLE_CUDA)
                 set(ZS_CUDA_ARCH ${_CUDA_ARCH})
                 # ref: https://zhengqm.github.io/blog/2018/12/07/cuda-nvcc-tips.html
                 target_compile_options(zpc_cuda_deps
-                    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-gencode=arch=compute_${ZS_CUDA_ARCH},code=compute_${ZS_CUDA_ARCH} -gencode=arch=compute_${ZS_CUDA_ARCH},code=lto_${ZS_CUDA_ARCH}>
+                    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-gencode=arch=compute_${ZS_CUDA_ARCH},code=compute_${ZS_CUDA_ARCH} -gencode=arch=compute_${ZS_CUDA_ARCH},code=sm_${ZS_CUDA_ARCH}>
                 )
                 target_link_options(zpc_cuda_deps
                     INTERFACE $<DEVICE_LINK:-arch=compute_${ZS_CUDA_ARCH} -code=sm_${ZS_CUDA_ARCH}> # -dlto -dlink
