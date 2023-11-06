@@ -101,7 +101,8 @@ if(ZS_ENABLE_CUDA)
                     _RESULT
                     _COMPILE_RESULT
                     ${_BINARY_TEST_DIR}
-                    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/cuda_compute_capability.cu
+                    ${PROJECT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
+                    LINK_LIBRARIES cuda
                     RUN_OUTPUT_VARIABLE _CUDA_ARCH
                 )
                 message(STATUS "deduced cuda arch: ${_CUDA_ARCH}")
