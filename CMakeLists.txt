@@ -170,7 +170,7 @@ set(ZS_ENABLE_VULKAN ${ZS_ENABLE_VULKAN} PARENT_SCOPE)
 
 # JIT
 if(ZS_ENABLE_JIT)
-    find_package(LLVM 15...17 CONFIG)
+    find_package(LLVM CONFIG)
     if (LLVM_FOUND)
         message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
         message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
