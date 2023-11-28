@@ -154,7 +154,10 @@ if(ZS_ENABLE_VULKAN)
     get_filename_component(ZS_VULKAN_LINK_DIRECTORY ${Vulkan_LIBRARIES} DIRECTORY)
     message("-- (deduced) vulkan library directory: ${ZS_VULKAN_LINK_DIRECTORY}")
     target_link_directories(zsproj_deps INTERFACE ${ZS_VULKAN_LINK_DIRECTORY})
-    target_link_libraries(zsproj_deps INTERFACE shaderc_combined spirv-cross-glsl spirv-cross-core spirv-cross-cpp)
+    target_link_libraries(zsproj_deps INTERFACE 
+      $<IF:$<CONFIG:Debug>, 
+        shaderc_combinedd spirv-cross-glsld spirv-cross-cored spirv-cross-cppd, 
+        shaderc_combined spirv-cross-glsl spirv-cross-core spirv-cross-cpp>)
     target_include_directories(zsproj_deps INTERFACE "$ENV{VULKAN_SDK}/include")
 
     # if(APPLE)
