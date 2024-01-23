@@ -186,15 +186,16 @@ if(ZS_ENABLE_JIT)
 
             separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
             target_compile_definitions(zpc_jit_deps INTERFACE 
-                $<BUILD_INTERFACE:${LLVM_DEFINITIONS_LIST}>)
+                $<BUILD_INTERFACE: ${LLVM_DEFINITIONS_LIST} >)
             target_include_directories(zpc_jit_deps INTERFACE 
-                $<$<COMPILE_LANGUAGE:CXX>:${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS}>)
+                $<$<COMPILE_LANGUAGE:CXX>: ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS}>)
 
             llvm_map_components_to_libnames(llvm_libs support core irreader)
 
             set(CLANG_LIBS 
                 clangBasic clangAPINotes clangLex clangParse clangAST clangDynamicASTMatchers clangASTMatchers clangCrossTU clangSema clangCodeGen clangAnalysis clangAnalysisFlowSensitive clangAnalysisFlowSensitiveModels clangEdit clangExtractAPI clangRewrite clangDriver clangSerialization clangRewriteFrontend clangFrontend clangFrontendTool clangToolingCore clangToolingInclusions clangToolingRefactoring clangToolingASTDiff clangToolingSyntax clangDependencyScanning clangTransformer clangTooling clangDirectoryWatcher clangIndex clangIndexSerialization clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangStaticAnalyzerFrontend clangFormat clangInterpreter clangHandleCXX clangHandleLLVM)  # clangARCMigrate 
             
+            message(STATUS "llvm compile definitions: ${LLVM_DEFINITIONS_LIST}")
             message(STATUS "available llvm libs: ${LLVM_AVAILABLE_LIBS}")
             message(STATUS "required llvm libs: ${llvm_libs}")
             message(STATUS "clang libs: ${CLANG_LIBS}")
