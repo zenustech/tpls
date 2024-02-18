@@ -193,7 +193,7 @@ if(ZS_ENABLE_JIT)
             llvm_map_components_to_libnames(llvm_libs support core irreader)
 
             set(CLANG_LIBS 
-                clangBasic clangAPINotes clangLex clangParse clangAST clangDynamicASTMatchers clangASTMatchers clangCrossTU clangSema clangCodeGen clangAnalysis clangAnalysisFlowSensitive clangAnalysisFlowSensitiveModels clangEdit clangExtractAPI clangRewrite clangDriver clangSerialization clangRewriteFrontend clangFrontend clangFrontendTool clangToolingCore clangToolingInclusions clangToolingRefactoring clangToolingASTDiff clangToolingSyntax clangDependencyScanning clangTransformer clangTooling clangDirectoryWatcher clangIndex clangIndexSerialization clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangStaticAnalyzerFrontend clangFormat clangInterpreter clangHandleCXX clangHandleLLVM)  # clangARCMigrate 
+                libclang clangBasic clangAPINotes clangLex clangParse clangAST clangDynamicASTMatchers clangASTMatchers clangCrossTU clangSema clangCodeGen clangAnalysis clangAnalysisFlowSensitive clangAnalysisFlowSensitiveModels clangEdit clangExtractAPI clangRewrite clangDriver clangSerialization clangRewriteFrontend clangFrontend clangFrontendTool clangToolingCore clangToolingInclusions clangToolingRefactoring clangToolingASTDiff clangToolingSyntax clangDependencyScanning clangTransformer clangTooling clangDirectoryWatcher clangIndex clangIndexSerialization clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangStaticAnalyzerFrontend clangFormat clangInterpreter clangHandleCXX clangHandleLLVM)  # clangARCMigrate 
             
             message(STATUS "llvm compile definitions: ${LLVM_DEFINITIONS_LIST}")
             message(STATUS "available llvm libs: ${LLVM_AVAILABLE_LIBS}")
@@ -202,6 +202,18 @@ if(ZS_ENABLE_JIT)
 
             target_link_libraries(zpc_jit_deps INTERFACE 
                 zpc_cxx_deps ${llvm_libs} ${CLANG_LIBS})
+
+            get_target_property(jit_dep_libs zpc_jit_deps INTERFACE_LINK_LIBRARIES)
+            if(ZS_BUILD_SHARED_LIBS)
+                foreach(lib ${jit_dep_libs})
+                    if (TARGET ${lib})
+                        get_target_property(lib_type ${lib} TYPE)
+                        if (lib_type STREQUAL "SHARED_LIBRARY")
+                            message(STATUS "NOTE: jit dependent lib [${lib}]: ${lib_type}")
+                        endif(lib_type STREQUAL "SHARED_LIBRARY")
+                    endif(TARGET ${lib})
+                endforeach(lib ${jit_dep_libs})
+            endif(ZS_BUILD_SHARED_LIBS)
 
         else(Clang_FOUND)
             set(ZS_ENABLE_JIT OFF)
