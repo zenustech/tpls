@@ -48,6 +48,7 @@ if(ZS_ENABLE_CUDA)
 
     if(TARGET CUDA::cuda_driver)
         add_library(zpc_cuda_deps INTERFACE)
+        add_library(zpc_cuda_arch_options INTERFACE)
 
         if(NOT EXISTS ZS_CUDA_ARCH)
             set(ZS_CUDA_ARCH 52)
@@ -113,10 +114,10 @@ if(ZS_ENABLE_CUDA)
                 foreach(CU_ARCH ${ZS_CUDA_ARCH})
                     message(STATUS "appending flag for cuda arch: ${CU_ARCH}")
                     # ref: https://zhengqm.github.io/blog/2018/12/07/cuda-nvcc-tips.html
-                    target_compile_options(zpc_cuda_deps
+                    target_compile_options(zpc_cuda_arch_options 
                         INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-gencode=arch=compute_${CU_ARCH},code=compute_${CU_ARCH} -gencode=arch=compute_${CU_ARCH},code=sm_${CU_ARCH}>
                     )
-                    target_link_options(zpc_cuda_deps
+                    target_link_options(zpc_cuda_arch_options 
                         INTERFACE $<DEVICE_LINK:-arch=compute_${CU_ARCH} -code=sm_${CU_ARCH}> # -dlto -dlink
                     )
                 endforeach()
