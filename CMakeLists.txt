@@ -105,16 +105,21 @@ if(ZS_ENABLE_CUDA)
                     LINK_LIBRARIES cuda
                     RUN_OUTPUT_VARIABLE _CUDA_ARCH
                 )
-                message(STATUS "deduced cuda arch: ${_CUDA_ARCH}")
-
                 set(ZS_CUDA_ARCH ${_CUDA_ARCH})
-                # ref: https://zhengqm.github.io/blog/2018/12/07/cuda-nvcc-tips.html
-                target_compile_options(zpc_cuda_deps
-                    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-gencode=arch=compute_${ZS_CUDA_ARCH},code=compute_${ZS_CUDA_ARCH} -gencode=arch=compute_${ZS_CUDA_ARCH},code=sm_${ZS_CUDA_ARCH}>
-                )
-                target_link_options(zpc_cuda_deps
-                    INTERFACE $<DEVICE_LINK:-arch=compute_${ZS_CUDA_ARCH} -code=sm_${ZS_CUDA_ARCH}> # -dlto -dlink
-                )
+
+                separate_arguments(ZS_CUDA_ARCH)
+                message(STATUS "deduced cuda arch: ${ZS_CUDA_ARCH}")
+
+                foreach(CU_ARCH ${ZS_CUDA_ARCH})
+                    message(STATUS "appending flag for cuda arch: ${CU_ARCH}")
+                    # ref: https://zhengqm.github.io/blog/2018/12/07/cuda-nvcc-tips.html
+                    target_compile_options(zpc_cuda_deps
+                        INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-gencode=arch=compute_${CU_ARCH},code=compute_${CU_ARCH} -gencode=arch=compute_${CU_ARCH},code=sm_${CU_ARCH}>
+                    )
+                    target_link_options(zpc_cuda_deps
+                        INTERFACE $<DEVICE_LINK:-arch=compute_${CU_ARCH} -code=sm_${CU_ARCH}> # -dlto -dlink
+                    )
+                endforeach()
             endif()
         endif(ZS_AUTO_DETECT_CUDA_ARCH)
 
