@@ -111,6 +111,8 @@ if(ZS_ENABLE_CUDA)
                 separate_arguments(ZS_CUDA_ARCH)
                 message(STATUS "deduced cuda arch: ${ZS_CUDA_ARCH}")
 
+                list(APPEND ZS_CUDA_ARCH 52)
+
                 foreach(CU_ARCH ${ZS_CUDA_ARCH})
                     message(STATUS "appending flag for cuda arch: ${CU_ARCH}")
                     # ref: https://zhengqm.github.io/blog/2018/12/07/cuda-nvcc-tips.html
