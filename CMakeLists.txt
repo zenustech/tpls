@@ -398,6 +398,7 @@ if(ZS_ENABLE_OPENVDB)
         target_link_libraries(zpc_deps INTERFACE zsopenvdb)
         target_link_libraries(zsopenvdb INTERFACE openvdb)
     else()
+        list(APPEND CMAKE_MODULE_PATH /usr/local/lib/cmake/OpenVDB/) # openvdb's default linux install location
         find_package(OpenVDB)
 
         if(ZS_BUILD_SHARED_LIBS)
