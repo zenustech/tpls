@@ -155,7 +155,8 @@ if(ZS_ENABLE_VULKAN)
 
   if(Vulkan_FOUND)
     message("-- vulkan libraries: " ${Vulkan_LIBRARIES})
-    message("-- vulkan include directory: " ${Vulkan_INCLUDE_DIRS})
+    message("-- vulkan include directories: " ${Vulkan_INCLUDE_DIRS})
+    message("-- vulkan include directory: " ${Vulkan_INCLUDE_DIR})
     message("-- vulkan components: " ${Vulkan_FIND_COMPONENTS})
     target_link_libraries(zsproj_deps INTERFACE Vulkan::Vulkan)
     # a not so elegant way of gaining access to other vulkan libs
@@ -166,7 +167,12 @@ if(ZS_ENABLE_VULKAN)
       $<IF:$<CONFIG:Debug>, 
         shaderc_combinedd spirv-cross-glsld spirv-cross-cored spirv-cross-cppd, 
         shaderc_combined spirv-cross-glsl spirv-cross-core spirv-cross-cpp>)
-    target_include_directories(zsproj_deps INTERFACE "$ENV{VULKAN_SDK}/include")
+    # target_include_directories(zsproj_deps INTERFACE "$ENV{VULKAN_SDK}/include")
+    target_include_directories(zsproj_deps INTERFACE ${Vulkan_INCLUDE_DIRS})
+
+    if (NOT EXISTS ${Vulkan_INCLUDE_DIR}/vma/vk_mem_alloc.h)
+        target_include_directories(zsproj_deps INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/vma")
+    endif()
 
     # if(APPLE)
     #     target_link_libraries(zsproj_deps INTERFACE Vulkan::MoltenVK)
