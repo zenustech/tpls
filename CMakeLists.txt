@@ -259,7 +259,7 @@ if(ZS_ENABLE_JIT)
             message(STATUS "available clang libs: ${CLANG_AVAILABLE_LIBS}")
 
             target_link_libraries(zpc_jit_deps INTERFACE 
-                zpc_cxx_deps ${llvm_libs} ${CLANG_AVAILABLE_LIB_FILES})
+                zpc_cxx_deps ${llvm_libs} ${CLANG_AVAILABLE_LIBS})
 
         else(Clang_FOUND AND ${LLVM_PACKAGE_VERSION} GREATER_EQUAL 15)
             message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} at ${LLVM_DIR}, Clang package search status: ${Clang_FOUND}.")
