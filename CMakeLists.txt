@@ -231,28 +231,33 @@ if(ZS_ENABLE_JIT)
 
             llvm_map_components_to_libnames(llvm_libs support core irreader)
 
-            set(CLANG_LIBS 
-                libclang clangBasic clangAPINotes clangLex clangParse clangAST clangDynamicASTMatchers clangASTMatchers clangCrossTU clangSema clangCodeGen clangAnalysis clangAnalysisFlowSensitive clangAnalysisFlowSensitiveModels clangEdit clangExtractAPI clangRewrite clangDriver clangSerialization clangRewriteFrontend clangFrontend clangFrontendTool clangToolingCore clangToolingInclusions clangToolingRefactoring clangToolingASTDiff clangToolingSyntax clangDependencyScanning clangTransformer clangTooling clangDirectoryWatcher clangIndex clangIndexSerialization clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangStaticAnalyzerFrontend clangFormat clangInterpreter clangHandleCXX clangHandleLLVM)  # clangARCMigrate 
+            # libclang is the only lib without prefix
+            set(CLANG_AVAILABLE_LIBS "libclang")
+            set(CLANG_AVAILABLE_LIB_FILES "libclang")
+            foreach(lib ${CLANG_EXPORTED_TARGETS})
+            if (NOT lib STREQUAL "libclang")
+                set(found False)
+                foreach(suffix ${CMAKE_FIND_LIBRARY_SUFFIXES})
+                    set(libfile ${LLVM_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${lib}${suffix})
+                    if (EXISTS ${libfile})
+                        if (found)
+                            message(FATAL_ERROR "Multiple library types of [${lib}] is found! Unable to determine.")
+                        endif(found)
+                        list(APPEND CLANG_AVAILABLE_LIBS ${lib})
+                        list(APPEND CLANG_AVAILABLE_LIB_FILES ${libfile})
+                        set(found True)
+                    endif(EXISTS ${libfile})
+                endforeach(suffix ${CMAKE_FIND_LIBRARY_SUFFIXES})
+            endif(NOT lib STREQUAL "libclang")
+            endforeach(lib ${CLANG_EXPORTED_TARGETS})
             
             message(STATUS "llvm compile definitions: ${LLVM_DEFINITIONS_LIST}")
             message(STATUS "available llvm libs: ${LLVM_AVAILABLE_LIBS}")
             message(STATUS "required llvm libs: ${llvm_libs}")
-            message(STATUS "clang libs: ${CLANG_LIBS}")
+            message(STATUS "available clang libs: ${CLANG_AVAILABLE_LIBS}")
 
             target_link_libraries(zpc_jit_deps INTERFACE 
-                zpc_cxx_deps ${llvm_libs} ${CLANG_LIBS})
-
-            get_target_property(jit_dep_libs zpc_jit_deps INTERFACE_LINK_LIBRARIES)
-            if(ZS_BUILD_SHARED_LIBS)
-                foreach(lib ${jit_dep_libs})
-                    if (TARGET ${lib})
-                        get_target_property(lib_type ${lib} TYPE)
-                        if (lib_type STREQUAL "SHARED_LIBRARY")
-                            message(STATUS "NOTE: jit dependent lib [${lib}]: ${lib_type}")
-                        endif(lib_type STREQUAL "SHARED_LIBRARY")
-                    endif(TARGET ${lib})
-                endforeach(lib ${jit_dep_libs})
-            endif(ZS_BUILD_SHARED_LIBS)
+                zpc_cxx_deps ${llvm_libs} ${CLANG_AVAILABLE_LIB_FILES})
 
         else(Clang_FOUND AND ${LLVM_PACKAGE_VERSION} GREATER_EQUAL 15)
             message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} at ${LLVM_DIR}, Clang package search status: ${Clang_FOUND}.")
