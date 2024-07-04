@@ -231,10 +231,12 @@ if(ZS_ENABLE_JIT)
 
             llvm_map_components_to_libnames(llvm_libs support core irreader)
 
+            set(CLANG_LIBS 
+                libclang clangBasic clangAPINotes clangLex clangParse clangAST clangDynamicASTMatchers clangASTMatchers clangCrossTU clangSema clangCodeGen clangAnalysis clangAnalysisFlowSensitive clangAnalysisFlowSensitiveModels clangEdit clangExtractAPI clangRewrite clangDriver clangSerialization clangRewriteFrontend clangFrontend clangFrontendTool clangToolingCore clangToolingInclusions clangToolingRefactoring clangToolingASTDiff clangToolingSyntax clangDependencyScanning clangTransformer clangTooling clangDirectoryWatcher clangIndex clangIndexSerialization clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangStaticAnalyzerFrontend clangFormat clangInterpreter clangHandleCXX clangHandleLLVM)
             # libclang is the only lib without prefix
             set(CLANG_AVAILABLE_LIBS "libclang")
             set(CLANG_AVAILABLE_LIB_FILES "libclang")
-            foreach(lib ${CLANG_EXPORTED_TARGETS})
+            foreach(lib ${CLANG_LIBS})
             if (NOT lib STREQUAL "libclang")
                 set(found False)
                 foreach(suffix ${CMAKE_FIND_LIBRARY_SUFFIXES})
@@ -249,7 +251,7 @@ if(ZS_ENABLE_JIT)
                     endif(EXISTS ${libfile})
                 endforeach(suffix ${CMAKE_FIND_LIBRARY_SUFFIXES})
             endif(NOT lib STREQUAL "libclang")
-            endforeach(lib ${CLANG_EXPORTED_TARGETS})
+            endforeach(lib ${CLANG_LIBS})
             
             message(STATUS "llvm compile definitions: ${LLVM_DEFINITIONS_LIST}")
             message(STATUS "available llvm libs: ${LLVM_AVAILABLE_LIBS}")
