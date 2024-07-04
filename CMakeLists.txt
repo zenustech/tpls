@@ -163,10 +163,35 @@ if(ZS_ENABLE_VULKAN)
     get_filename_component(ZS_VULKAN_LINK_DIRECTORY ${Vulkan_LIBRARIES} DIRECTORY)
     message("-- (deduced) vulkan library directory: ${ZS_VULKAN_LINK_DIRECTORY}")
     target_link_directories(zsproj_deps INTERFACE ${ZS_VULKAN_LINK_DIRECTORY})
+
+    set(VK_ADDITIONAL_LIBS shaderc_combined spirv-cross-glsl spirv-cross-core spirv-cross-cpp)
+    set(AVAILABLE_VK_ADDITIONAL_LIBS "")
+    foreach(lib ${VK_ADDITIONAL_LIBS})
+    set(found False)
+    foreach(suffix ${CMAKE_FIND_LIBRARY_SUFFIXES})
+        set(libfile "")
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            set(libfile ${ZS_VULKAN_LINK_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}${lib}d${suffix})
+        else()
+            set(libfile ${ZS_VULKAN_LINK_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}${lib}${suffix})
+        endif()
+        if (EXISTS ${libfile})
+            if (found)
+                message(FATAL_ERROR "Multiple library types of [${lib}] is found! Unable to determine.")
+            endif(found)
+            list(APPEND AVAILABLE_VK_ADDITIONAL_LIBS ${libfile})
+            set(found True)
+        endif()
+    endforeach(suffix ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    endforeach(lib ${VK_ADDITIONAL_LIBS})
+    message("-- additional available libraries: ${AVAILABLE_VK_ADDITIONAL_LIBS}")
+    target_link_libraries(zsproj_deps INTERFACE ${AVAILABLE_VK_ADDITIONAL_LIBS})
+    #[=[
     target_link_libraries(zsproj_deps INTERFACE 
       $<IF:$<CONFIG:Debug>, 
         shaderc_combinedd spirv-cross-glsld spirv-cross-cored spirv-cross-cppd, 
         shaderc_combined spirv-cross-glsl spirv-cross-core spirv-cross-cpp>)
+    ]=]
     # target_include_directories(zsproj_deps INTERFACE "$ENV{VULKAN_SDK}/include")
     target_include_directories(zsproj_deps INTERFACE ${Vulkan_INCLUDE_DIRS})
 
