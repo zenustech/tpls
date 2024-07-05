@@ -258,6 +258,7 @@ if(ZS_ENABLE_JIT)
             message(STATUS "required llvm libs: ${llvm_libs}")
             message(STATUS "available clang libs: ${CLANG_AVAILABLE_LIBS}")
 
+            target_link_directories(zpc_jit_deps INTERFACE ${LLVM_LIBRARY_DIR})
             target_link_libraries(zpc_jit_deps INTERFACE 
                 zpc_cxx_deps ${llvm_libs} ${CLANG_AVAILABLE_LIBS})
 
