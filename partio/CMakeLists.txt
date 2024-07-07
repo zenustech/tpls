@@ -34,11 +34,15 @@
 cmake_minimum_required(VERSION 3.15.0)
 project(partio LANGUAGES CXX)
 
+#[=[
 if(WIN32)
     option(PARTIO_BUILD_SHARED_LIBS "Enabled shared libraries" OFF)
 else()
     option(PARTIO_BUILD_SHARED_LIBS "Enabled shared libraries" ON)
 endif()
+]=]
+
+set(PARTIO_BUILD_SHARED_LIBS OFF)
 
 # Enable C++11
 if (DEFINED ENV{CXXFLAGS_STD})

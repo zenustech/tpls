@@ -2,11 +2,7 @@
 cmake_minimum_required(VERSION 3.17.0)
 project(zswhereami LANGUAGES CXX)
 
-if(WHEREAMI_BUILD_SHARED_LIBS)
-    set(WHEREAMI_LIBRARY_TYPE SHARED)
-else()
-    set(WHEREAMI_LIBRARY_TYPE STATIC)
-endif()
+set(WHEREAMI_LIBRARY_TYPE STATIC)
 
 add_library(zswhereami ${WHEREAMI_LIBRARY_TYPE} ${PROJECT_SOURCE_DIR}/whereami.c)
 set_target_properties(zswhereami PROPERTIES LINKER_LANGUAGE CXX)
