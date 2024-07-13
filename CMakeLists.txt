@@ -5,7 +5,6 @@ option(ZS_ENABLE_OPENGL "Enable opengl" OFF)
 option(ZS_ENABLE_OPENVDB "Enable openvdb" OFF)
 option(ZS_ENABLE_CUDA "Enable cuda" OFF)
 option(ZS_ENABLE_VULKAN "Enable vulkan backend" OFF)
-option(ZS_ENABLE_SYCL_COMPUTECPP "Enable sycl[computecpp]" OFF)
 option(ZS_ENABLE_SYCL_DPCPP "Enable SYCL[Intel-DPC++] backend" OFF)
 option(ZS_ENABLE_OPENCL "Enable OpenCL backend" OFF)
 option(ZS_ENABLE_OPENMP "Enable openmp" OFF)
@@ -282,32 +281,7 @@ if (ZS_ENABLE_JIT)
     set(LLVM_VERSION_MAJOR ${LLVM_VERSION_MAJOR} PARENT_SCOPE)
 endif()
 
-# sycl-computecpp
-if(ZS_ENABLE_SYCL_COMPUTECPP)
-    if(NOT DEFINED ComputeCpp_DIR OR NOT DEFINED COMPUTECPP_BITCODE)
-        message(WARNING "SYCL enabled but ComputeCpp_DIR and COMPUTECPP_BITCODE not all set!")
-        set(ZS_ENABLE_SYCL_COMPUTECPP OFF)
-    else(FIND_DIR_MACRO_DEFINED)
-        find_package(ComputeCpp)
-
-        if(ComputeCpp_FOUND)
-            add_library(zpc_sycl_deps INTERFACE)
-            target_link_libraries(zpc_deps INTERFACE zpc_sycl_deps)
-            target_compile_features(zpc_sycl_deps INTERFACE cxx_std_17)
-            set_target_properties(ComputeCpp::ComputeCpp PROPERTIES IMPORTED_GLOBAL TRUE)
-            target_link_libraries(zpc_sycl_deps INTERFACE ComputeCpp::ComputeCpp)
-
-            list(APPEND COMPUTECPP_DEVICE_COMPILER_FLAGS -std=c++17)
-            set(COMPUTECPP_DEVICE_COMPILER_FLAGS ${COMPUTECPP_DEVICE_COMPILER_FLAGS} PARENT_SCOPE)
-        else(ComputeCpp_NOTFOUND)
-            set(ZS_ENABLE_SYCL_COMPUTECPP OFF)
-        endif(ComputeCpp_FOUND)
-    endif()
-endif(ZS_ENABLE_SYCL_COMPUTECPP)
-
-set(ZS_ENABLE_SYCL_COMPUTECPP ${ZS_ENABLE_SYCL_COMPUTECPP} PARENT_SCOPE)
-
-# sycl-dpcpp
+# intel-sycl
 if(ZS_ENABLE_SYCL_DPCPP)
     message(STATUS "\n-- ------------------------------- Checking Intel SYCL ------------------------------- ")
     # get_filename_component(ZS_CXX_COMPILER_BINARY ${CMAKE_CXX_COMPILER} NAME)
