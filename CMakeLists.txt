@@ -44,6 +44,7 @@ set(ZS_ENABLE_OPENGL ${ZS_ENABLE_OPENGL} PARENT_SCOPE)
 
 # cuda
 if(ZS_ENABLE_CUDA)
+    message(STATUS "\n-- ------------------------------- Checking CUDA ------------------------------- ")
     find_package(CUDAToolkit)
 
     if(TARGET CUDA::cuda_driver)
@@ -145,12 +146,14 @@ if(ZS_ENABLE_CUDA)
     else()
         set(ZS_ENABLE_CUDA OFF)
     endif()
+    message(STATUS "############################### ZPC: CUDA (${ZS_ENABLE_CUDA}) ###############################")
 endif(ZS_ENABLE_CUDA)
 
 set(ZS_ENABLE_CUDA ${ZS_ENABLE_CUDA} PARENT_SCOPE)
 
 # vulkan
 if(ZS_ENABLE_VULKAN)
+  message(STATUS "\n-- ------------------------------- Checking Vulkan ------------------------------- ")
   find_package(Vulkan QUIET)
 
   if(Vulkan_FOUND)
@@ -206,12 +209,14 @@ if(ZS_ENABLE_VULKAN)
     message(STATUS "Vulkan not found!")
     set(ZS_ENABLE_VULKAN OFF)
   endif()
+  message(STATUS "############################### ZPC: Vulkan (${ZS_ENABLE_VULKAN}) ###############################")
 endif(ZS_ENABLE_VULKAN)
 
 set(ZS_ENABLE_VULKAN ${ZS_ENABLE_VULKAN} PARENT_SCOPE)
 
 # JIT
 if(ZS_ENABLE_JIT)
+    message(STATUS "\n-- ------------------------------- Checking LLVM/Clang ------------------------------- ")
     find_package(LLVM CONFIG)
     if (LLVM_FOUND)
         message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -269,6 +274,7 @@ if(ZS_ENABLE_JIT)
     else(LLVM_FOUND)
         set(ZS_ENABLE_JIT OFF)
     endif(LLVM_FOUND)
+    message(STATUS "############################### ZPC: LLVM/Clang (${ZS_ENABLE_JIT}) ###############################")
 endif(ZS_ENABLE_JIT)
 
 set(ZS_ENABLE_JIT ${ZS_ENABLE_JIT} PARENT_SCOPE)
@@ -303,16 +309,31 @@ set(ZS_ENABLE_SYCL_COMPUTECPP ${ZS_ENABLE_SYCL_COMPUTECPP} PARENT_SCOPE)
 
 # sycl-dpcpp
 if(ZS_ENABLE_SYCL_DPCPP)
-    get_filename_component(ZS_CXX_COMPILER_BINARY ${CMAKE_CXX_COMPILER} NAME)
+    message(STATUS "\n-- ------------------------------- Checking Intel SYCL ------------------------------- ")
+    # get_filename_component(ZS_CXX_COMPILER_BINARY ${CMAKE_CXX_COMPILER} NAME)
+    cmake_path(GET CMAKE_CXX_COMPILER STEM LAST_ONLY ZS_CXX_COMPILER_BINARY)
+    message(STATUS "Current C++ compiler is ${ZS_CXX_COMPILER_BINARY} (${CMAKE_CXX_COMPILER})")
 
-    if(${ZS_CXX_COMPILER_BINARY} STREQUAL "dpcpp")
-        add_library(zpc_sycl_deps INTERFACE)
-        target_link_libraries(zpc_deps INTERFACE zpc_sycl_deps)
-        target_compile_features(zpc_sycl_deps INTERFACE cxx_std_17)
-        target_link_libraries(zpc_sycl_deps INTERFACE sycl)
-    else()
+    find_package(IntelSYCL)
+
+    if (IntelSYCL_FOUND)
+        if(${ZS_CXX_COMPILER_BINARY} STREQUAL "icx")
+            add_library(zpc_sycl_deps INTERFACE)
+            target_link_libraries(zpc_deps INTERFACE zpc_sycl_deps)
+            target_compile_features(zpc_sycl_deps INTERFACE cxx_std_17)
+            target_link_libraries(zpc_sycl_deps INTERFACE IntelSYCL::SYCL_CXX)
+        else()
+            message(STATUS "To use IntelSYCL, please add \"-DCMAKE_CXX_COMPILER=icx\"")
+            set(ZS_ENABLE_SYCL_DPCPP OFF)
+        endif()
+    else(IntelSYCL_FOUND)
         set(ZS_ENABLE_SYCL_DPCPP OFF)
-    endif()
+        message(STATUS "To enable IntelSYCL, please add \"-DIntelSYCL_DIR=\"path/where/IntelSYCLConfig.cmake/reisdes\" -DCMAKE_CXX_COMPILER=icx\" upon cmake configuration")
+        if (WIN32)
+            message(STATUS "On windows, please open \"Intel oneAPI command prompt for Intel 64 for Visual Studio 2022\" and type \"devenv\" to open Visual Studio IDE!")
+        endif(WIN32)
+    endif(IntelSYCL_FOUND)
+    message(STATUS "############################### ZPC: Intel SYCL (${ZS_ENABLE_SYCL_DPCPP}) ###############################")
 endif(ZS_ENABLE_SYCL_DPCPP)
 
 set(ZS_ENABLE_SYCL_DPCPP ${ZS_ENABLE_SYCL_DPCPP} PARENT_SCOPE)
@@ -369,6 +390,7 @@ set(ZS_ENABLE_PTHREADS ${ZS_ENABLE_PTHREADS} PARENT_SCOPE)
 
 # openmp
 if(ZS_ENABLE_OPENMP)
+    message(STATUS "\n-- ------------------------------- Checking OpenMP ------------------------------- ")
     # ref: https://gitlab.com/palisade/palisade-development/-/blob/master/CMakeLists.txt
     if (APPLE)
         if (USE_MACPORTS)
@@ -428,6 +450,7 @@ if(ZS_ENABLE_OPENMP)
 
         # message(FATAL_ERROR "OpenMP not found!")
     endif()
+    message(STATUS "############################### ZPC: OpenMP (${ZS_ENABLE_OPENMP}) ###############################")
 endif(ZS_ENABLE_OPENMP)
 
 set(ZS_ENABLE_OPENMP ${ZS_ENABLE_OPENMP} PARENT_SCOPE)
