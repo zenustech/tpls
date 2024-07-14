@@ -408,7 +408,15 @@ if(ZS_ENABLE_OPENMP)
     set(OpenMP_CXX_INCLUDE_DIR ${OPENMP_INCLUDES})
     find_package(OpenMP)
 
-    if(TARGET OpenMP::OpenMP_CXX)
+    if (OpenMP_FOUND AND CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+        add_library(zpc_omp_deps INTERFACE)
+        target_link_libraries(zpc_deps INTERFACE zpc_omp_deps)
+        target_compile_options(zpc_omp_deps 
+            INTERFACE $<$<COMPILE_LANGUAGE:CXX>: $<IF:$<CXX_COMPILER_ID:Intel>, /Qiopenmp, -fiopenmp>>
+        )
+        # https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2023-0/fopenmp-targets-qopenmp-targets.html
+        # /Qopenmp-targets:spir64 -fopenmp-targets=spir64
+    elseif(TARGET OpenMP::OpenMP_CXX)
         add_library(zpc_omp_deps INTERFACE)
         target_link_libraries(zpc_deps INTERFACE zpc_omp_deps)
 
@@ -423,15 +431,8 @@ if(ZS_ENABLE_OPENMP)
         set(ZS_ENABLE_OPENMP OFF)
 
         # message(FATAL_ERROR "OpenMP not found!")
-    endif()
-
-    if (OpenMP_FOUND AND CMAKE_CXX_COMPILER_ID MATCHES "Intel")
-        target_compile_options(zpc_omp_deps 
-            INTERFACE $<$<COMPILE_LANGUAGE:CXX>: $<IF:$<CXX_COMPILER_ID:Intel>, /Qiopenmp, -fiopenmp>>
-        )
-        # https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2023-0/fopenmp-targets-qopenmp-targets.html
-        # /Qopenmp-targets:spir64 -fopenmp-targets=spir64
     endif(OpenMP_FOUND AND CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+
     message(STATUS "############################### ZPC: OpenMP (${ZS_ENABLE_OPENMP}) ###############################")
 endif(ZS_ENABLE_OPENMP)
 

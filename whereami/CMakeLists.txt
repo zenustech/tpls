@@ -1,6 +1,6 @@
 
 cmake_minimum_required(VERSION 3.17.0)
-project(zswhereami LANGUAGES CXX)
+project(zswhereami LANGUAGES C CXX)
 
 set(WHEREAMI_LIBRARY_TYPE STATIC)
 

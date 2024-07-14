@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 3.11)
 set(CMAKE_CXX_STANDARD 14)
 
-project(MshIO)
+project(MshIO LANGUAGES C CXX)
 
 option(MSHIO_BUILD_TESTS "Build unit tests" Off)
 option(MSHIO_BUILD_EXAMPLES "Build examples" Off)
