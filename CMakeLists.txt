@@ -424,6 +424,14 @@ if(ZS_ENABLE_OPENMP)
 
         # message(FATAL_ERROR "OpenMP not found!")
     endif()
+
+    if (OpenMP_FOUND AND CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+        target_compile_options(zpc_omp_deps 
+            INTERFACE $<$<COMPILE_LANGUAGE:CXX>: $<IF:$<CXX_COMPILER_ID:Intel>, /Qiopenmp, -fiopenmp>>
+        )
+        # https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2023-0/fopenmp-targets-qopenmp-targets.html
+        # /Qopenmp-targets:spir64 -fopenmp-targets=spir64
+    endif(OpenMP_FOUND AND CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     message(STATUS "############################### ZPC: OpenMP (${ZS_ENABLE_OPENMP}) ###############################")
 endif(ZS_ENABLE_OPENMP)
 
