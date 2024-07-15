@@ -296,6 +296,13 @@ if(ZS_ENABLE_SYCL_DPCPP)
             target_link_libraries(zpc_deps INTERFACE zpc_sycl_deps)
             target_compile_features(zpc_sycl_deps INTERFACE cxx_std_17)
             target_link_libraries(zpc_sycl_deps INTERFACE IntelSYCL::SYCL_CXX)
+            # target_link_directories(zpc_sycl_deps INTERFACE ${SYCL_LIBRARY_DIR})
+            ## ref: https://www.cntofu.com/book/46/linux_system/1515.md
+            target_link_options(zpc_sycl_deps INTERFACE $<HOST_LINK:-rpath,${SYCL_LIBRARY_DIR}>)
+            # message(STATUS "\n\n lib dir: ${SYCL_LIBRARY_DIR} \n\n")
+            # message(STATUS "\n\n link flags: ${SYCL_LINK_FLAGS} \n\n")
+            # message(STATUS "\n\n compile flags: ${SYCL_FLAGS} \n\n")
+            # message(STATUS "\n\n inc dir: ${SYCL_INCLUDE_DIR} \n\n")
         else()
             message(STATUS "To use IntelSYCL, please add \"-DCMAKE_C_COMPILER=\"path/to/compiler/icx\" -DCMAKE_CXX_COMPILER=\"path/to/compiler/icx\"\"")
             set(ZS_ENABLE_SYCL_DPCPP OFF)
@@ -403,19 +410,38 @@ if(ZS_ENABLE_OPENMP)
                 set(OpenMP_omp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
             endif()
         endif(USE_MACPORTS)
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+        if(WIN32)
+            set(OpenMP_C_FLAGS "/Qiopenmp /Qopenmp-targets:spir64")
+        else()
+            set(OpenMP_C_FLAGS "-fiopenmp -fopenmp-targets=spir64")
+        endif()
+        set(OpenMP_C_LIB_NAMES "iomp5")
+        set(OpenMP_iomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
+        if(WIN32)
+            set(OpenMP_CXX_FLAGS "/Qiopenmp /Qopenmp-targets:spir64")
+        else()
+            set(OpenMP_CXX_FLAGS "-fiopenmp -fopenmp-targets=spir64")
+        endif()
+        set(OpenMP_CXX_LIB_NAMES "iomp5")
+        set(OpenMP_iomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
     endif(APPLE)
 
-    set(OpenMP_CXX_INCLUDE_DIR ${OPENMP_INCLUDES})
+    if (OPENMP_INCLUDES)
+        set(OpenMP_CXX_INCLUDE_DIR ${OPENMP_INCLUDES})
+    endif()
     find_package(OpenMP)
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
         add_library(zpc_omp_deps INTERFACE)
         target_link_libraries(zpc_deps INTERFACE zpc_omp_deps)
+        #[=[
         target_compile_options(zpc_omp_deps 
             INTERFACE $<$<COMPILE_LANGUAGE:CXX>: $<IF:$<BOOL:${WIN32}>, 
                 /Qiopenmp /Qopenmp-targets:spir64, 
                 -fiopenmp -fopenmp-targets=spir64>>
-        )
+        )]=]
+        target_link_libraries(zpc_omp_deps INTERFACE OpenMP::OpenMP_CXX)
         # https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2023-0/fopenmp-targets-qopenmp-targets.html
         # /Qopenmp-targets:spir64 -fopenmp-targets=spir64
     elseif(TARGET OpenMP::OpenMP_CXX)
