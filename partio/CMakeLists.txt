@@ -81,7 +81,7 @@ set(PARTIO_LIBRARIES zspartio ${ZLIB_LIBRARY})
 file(GLOB io_cpp "io/*.cpp")
 file(GLOB core_cpp "core/*.cpp")
 
-add_library(zspartio STATIC ${PARTIO_LIBRARY_TYPE} ${io_cpp} ${core_cpp})
+add_library(zspartio STATIC ${io_cpp} ${core_cpp})
 set_target_properties(zspartio PROPERTIES
     OUTPUT_NAME zspartio
     POSITION_INDEPENDENT_CODE ON
