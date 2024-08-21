@@ -559,7 +559,7 @@ target_include_directories(zsproj_deps INTERFACE
 
 # other local tpls
 # fmt
-target_compile_definitions(zsproj_deps INTERFACE FMT_HEADER_ONLY)
+target_compile_definitions(zsproj_deps INTERFACE -DFMT_HEADER_ONLY=1)
 
 # Catch2
 # gcem
