@@ -235,7 +235,7 @@ if(ZS_ENABLE_JIT)
 
             separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
             target_compile_definitions(zpc_jit_deps INTERFACE 
-                $<BUILD_INTERFACE: ${LLVM_DEFINITIONS_LIST} >)
+                $<BUILD_INTERFACE: ${LLVM_DEFINITIONS_LIST} LLVM_VERSION_MAJOR=${LLVM_VERSION_MAJOR}>)
             target_include_directories(zpc_jit_deps INTERFACE 
                 $<$<COMPILE_LANGUAGE:CXX>: ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS}>)
 
