@@ -156,6 +156,7 @@ if(ZS_ENABLE_VULKAN)
   find_package(Vulkan QUIET)
 
   if(Vulkan_FOUND)
+    message("-- vulkan version: ${Vulkan_VERSION}")
     message("-- vulkan libraries: " ${Vulkan_LIBRARIES})
     message("-- vulkan include directories: " ${Vulkan_INCLUDE_DIRS})
     message("-- vulkan include directory: " ${Vulkan_INCLUDE_DIR})
@@ -202,6 +203,17 @@ if(ZS_ENABLE_VULKAN)
     ]=]
     # target_include_directories(zsproj_deps INTERFACE "$ENV{VULKAN_SDK}/include")
     target_include_directories(zsproj_deps INTERFACE ${Vulkan_INCLUDE_DIRS})
+    if (${Vulkan_VERSION} GREATER_EQUAL 1.4.0.0)
+        target_compile_definitions(zsproj_deps INTERFACE
+            -DZS_VK_DYNAMIC_LOADER=vk::detail::DynamicLoader
+            -DZS_VK_DISPATCH_LOADER_DYNAMIC=vk::detail::DispatchLoaderDynamic
+        )
+    else()
+        target_compile_definitions(zsproj_deps INTERFACE
+            -DZS_VK_DYNAMIC_LOADER=vk::DynamicLoader
+            -DZS_VK_DISPATCH_LOADER_DYNAMIC=vk::DispatchLoaderDynamic
+        )
+    endif()
 
     if (NOT EXISTS ${Vulkan_INCLUDE_DIR}/vma/vk_mem_alloc.h)
         target_include_directories(zsproj_deps INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/vma")
