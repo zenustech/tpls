@@ -575,6 +575,12 @@ target_include_directories(zsproj_deps INTERFACE
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# asio
+target_include_directories(zsproj_deps INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/asio
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/asio
+)
+
 # other local tpls
 # fmt
 target_compile_definitions(zsproj_deps INTERFACE -DFMT_HEADER_ONLY=1)
