@@ -10,7 +10,7 @@ option(ZS_ENABLE_OPENCL "Enable OpenCL backend" OFF)
 option(ZS_ENABLE_OPENMP "Enable openmp" OFF)
 option(ZS_ENABLE_JIT "Enable JIT module" OFF)
 option(ZS_ENABLE_PTHREADS "Enable pthreads" OFF)
-option(ZS_ENABLE_PARTIO "Enable partio" OFF)
+option(ZS_ENABLE_PARTIO "Enable partio" ON)
 option(ZS_ENABLE_MSHIO "Enable .msh file io" OFF)
 
 # CUDA
