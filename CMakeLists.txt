@@ -6,6 +6,7 @@ option(ZS_ENABLE_OPENVDB "Enable openvdb" OFF)
 option(ZS_ENABLE_CUDA "Enable cuda" OFF)
 option(ZS_ENABLE_VULKAN "Enable vulkan backend" OFF)
 option(ZS_ENABLE_SYCL_ONEAPI "Enable SYCL[Intel-OneAPI] backend" OFF)
+option(ZS_ENABLE_SYCL_ACPP "Enable SYCL[AdaptiveCpp (originally hipSYCL)] backend" OFF)
 option(ZS_ENABLE_OPENCL "Enable OpenCL backend" OFF)
 option(ZS_ENABLE_OPENMP "Enable openmp" OFF)
 option(ZS_ENABLE_JIT "Enable JIT module" OFF)
@@ -342,20 +343,27 @@ endif(ZS_ENABLE_SYCL_ONEAPI)
 set(ZS_ENABLE_SYCL_ONEAPI ${ZS_ENABLE_SYCL_ONEAPI} PARENT_SCOPE)
 
 # sycl-clang
-if(ZS_ENABLE_SYCL)
-    if(${CMAKE_CXX_COMPILER_ID} MATCHES ".*Clang")
+if(ZS_ENABLE_SYCL_ACPP)
+    message(STATUS "\n-- ------------------------------- Checking AdaptiveCpp SYCL ------------------------------- ")
+    cmake_path(GET CMAKE_CXX_COMPILER STEM LAST_ONLY ZS_CXX_COMPILER_BINARY)
+    message(STATUS "Current C++ compiler is ${ZS_CXX_COMPILER_BINARY} (${CMAKE_CXX_COMPILER})")
+
+    find_package(AdaptiveCpp CONFIG)
+
+    # if(${CMAKE_CXX_COMPILER_ID} MATCHES ".*Clang")
+    if (AdaptiveCpp_FOUND)
         add_library(zpc_sycl_deps INTERFACE)
         target_link_libraries(zpc_deps INTERFACE zpc_sycl_deps)
         target_compile_features(zpc_sycl_deps INTERFACE cxx_std_17)
-        target_compile_options(zpc_sycl_deps INTERFACE
-            $<$<COMPILE_LANGUAGE:CXX>: -fsycl -fsycl-targets=nvptx64>
-        )
-    else()
-        set(ZS_ENABLE_SYCL OFF)
-    endif()
-endif(ZS_ENABLE_SYCL)
+        target_link_libraries(zpc_sycl_deps INTERFACE AdaptiveCpp::acpp-rt)
+    else(AdaptiveCpp_FOUND)
+        set(ZS_ENABLE_SYCL_ACPP OFF)
+        message(STATUS "To enable AdaptiveCpp, please add \"-DAdaptiveCpp_DIR=\"path/where/adaptivecpp-config.cmake/reisdes\" upon cmake configuration")
+    endif(AdaptiveCpp_FOUND)
+    message(STATUS "############################### ZPC: AdaptiveCpp SYCL (${ZS_ENABLE_SYCL_ACPP}) ###############################")
+endif(ZS_ENABLE_SYCL_ACPP)
 
-set(ZS_ENABLE_SYCL ${ZS_ENABLE_SYCL} PARENT_SCOPE)
+set(ZS_ENABLE_SYCL_ACPP ${ZS_ENABLE_SYCL_ACPP} PARENT_SCOPE)
 
 # opencl
 if(ZS_ENABLE_OPENCL)
