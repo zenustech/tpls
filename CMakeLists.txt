@@ -156,9 +156,9 @@ set(ZS_ENABLE_CUDA ${ZS_ENABLE_CUDA} PARENT_SCOPE)
 if(ZS_ENABLE_MUSA)
     message(STATUS "\n-- ------------------------------- Checking MUSA ------------------------------- ")
 
-    find_package(MUSA)
+    find_package(MUSAToolkit)
 
-    if(MUSA_FOUND)
+    if(MUSAToolkit_FOUND)
         add_library(zpc_musa_deps INTERFACE)
         add_library(zpc_musa_arch_options INTERFACE)
 
@@ -166,10 +166,10 @@ if(ZS_ENABLE_MUSA)
         file(REMOVE_RECURSE ${_BINARY_TEST_DIR})
         file(MAKE_DIRECTORY ${_BINARY_TEST_DIR})
 
-        cmake_path(GET MUSA_LIBRARIES PARENT_PATH MUSA_LINK_LIBRARY_DIR)
+        # cmake_path(GET MUSA_LIBRARIES PARENT_PATH MUSA_LINK_LIBRARY_DIR)
         # https://stackoverflow.com/questions/19901934/libpthread-so-0-error-adding-symbols-dso-missing-from-command-line 
         execute_process(
-            COMMAND ${MUSA_MCC_EXECUTABLE} -x musa ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/musa_compute_capability.cc -I${MUSA_INCLUDE_DIRS} -L${MUSA_LINK_LIBRARY_DIR} -Wl,--copy-dt-needed-entries -lmusart -o${_BINARY_TEST_DIR}/test_musa_capability
+            COMMAND ${MUSAToolkit_MCC_EXECUTABLE} -x musa ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/musa_compute_capability.cc -I${MUSAToolkit_INCLUDE_DIRS} -L${MUSAToolkit_LIBRARY_DIR} -Wl,--copy-dt-needed-entries -lmusart -o${_BINARY_TEST_DIR}/test_musa_capability
             RESULT_VARIABLE _RESULT
             OUTPUT_VARIABLE _OUTPUT_RESULT
             ERROR_VARIABLE _ERROR_RESULT
@@ -192,21 +192,16 @@ if(ZS_ENABLE_MUSA)
             message(STATUS "deduced MUSA compute capability: ${ZS_MUSA_ARCH}")
         endif(_ERROR_RESULT)
 
-        message(STATUS "MUSA_VERSION_MAJOR: ${MUSA_VERSION_MAJOR}")
-        message(STATUS "MUSA_VERSION_MINOR: ${MUSA_VERSION_MINOR}")
-        message(STATUS "MUSA_VERSION: ${MUSA_VERSION}")
-        message(STATUS "MUSA_MCC_EXECUTABLE: ${MUSA_MCC_EXECUTABLE}")
-        message(STATUS "MUSA_TOOLKIT_ROOT_DIR: ${MUSA_TOOLKIT_ROOT_DIR}")
-        message(STATUS "MUSA_INCLUDE_DIRS: ${MUSA_INCLUDE_DIRS}")
-        message(STATUS "MUSA_LIBRARIES: ${MUSA_LIBRARIES}")
-        message(STATUS "MUSA_MUFFT_LIBRARIES: ${MUSA_MUFFT_LIBRARIES}")
-        message(STATUS "MUSA_MUBLAS_LIBRARIES: ${MUSA_MUBLAS_LIBRARIES}")
-        message(STATUS "MUSA_mupti_LIBRARY: ${MUSA_mupti_LIBRARY}")
+        # message(STATUS "MUSAToolkit_VERSION_MAJOR: ${MUSAToolkit_VERSION_MAJOR}")
+        # message(STATUS "MUSAToolkit_VERSION_MINOR: ${MUSAToolkit_VERSION_MINOR}")
+        message(STATUS "MUSAToolkit_MCC_EXECUTABLE: ${MUSAToolkit_MCC_EXECUTABLE}")
+        message(STATUS "MUSAToolkit_INCLUDE_DIRS: ${MUSAToolkit_INCLUDE_DIRS}")
+        message(STATUS "MUSAToolkit_LIBRARY_DIR: ${MUSAToolkit_LIBRARY_DIR}")
 
         foreach(MU_ARCH ${ZS_MUSA_ARCH})
             message(STATUS "appending flag for musa arch: mp_${MU_ARCH}")
             target_compile_options(zpc_musa_arch_options
-                INTERFACE --offload-arch=mp_${MU_ARCH}>
+                INTERFACE $<$<COMPILE_LANGUAGE:MUSA>:--offload-arch=mp_${MU_ARCH}> >
             )
         endforeach()
 
@@ -214,7 +209,7 @@ if(ZS_ENABLE_MUSA)
         target_link_libraries(zpc_deps INTERFACE zpc_musa_deps)
         # target_include_directories(zpc_musa_deps INTERFACE ${MUSA_INCLUDE_DIRS})
         target_link_libraries(zpc_musa_deps INTERFACE MUSA::musart)
-        target_compile_options(zpc_musa_deps INTERFACE -fPIC -mtgpu-enable-const-calc)
+        # target_compile_options(zpc_musa_deps INTERFACE -fPIC -mtgpu-enable-const-calc)
     else()
         set(ZS_ENABLE_MUSA OFF)
     endif(MUSA_FOUND)
