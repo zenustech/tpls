@@ -160,37 +160,6 @@ if(ZS_ENABLE_MUSA)
 
     if(MUSAToolkit_FOUND)
         add_library(zpc_musa_deps INTERFACE)
-        add_library(zpc_musa_arch_options INTERFACE)
-
-        set(_BINARY_TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/CMake/compile_tests/MUSAComputeCapabilityWorkdir)
-        file(REMOVE_RECURSE ${_BINARY_TEST_DIR})
-        file(MAKE_DIRECTORY ${_BINARY_TEST_DIR})
-
-        # cmake_path(GET MUSA_LIBRARIES PARENT_PATH MUSA_LINK_LIBRARY_DIR)
-        # https://stackoverflow.com/questions/19901934/libpthread-so-0-error-adding-symbols-dso-missing-from-command-line 
-        execute_process(
-            COMMAND ${MUSAToolkit_MCC_EXECUTABLE} -x musa ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/musa_compute_capability.cc -I${MUSAToolkit_INCLUDE_DIRS} -L${MUSAToolkit_LIBRARY_DIR} -Wl,--copy-dt-needed-entries -lmusart -o${_BINARY_TEST_DIR}/test_musa_capability
-            RESULT_VARIABLE _RESULT
-            OUTPUT_VARIABLE _OUTPUT_RESULT
-            ERROR_VARIABLE _ERROR_RESULT
-        )
-        execute_process(
-            COMMAND ${_BINARY_TEST_DIR}/test_musa_capability
-            RESULT_VARIABLE _COMPILE_RESULT
-            OUTPUT_VARIABLE _MUSA_COMPUTE_CAPABILITY
-            ERROR_VARIABLE _ERROR_MESSAGE
-        )
-
-        set(ZS_MUSA_ARCH)
-
-        if(_ERROR_RESULT)
-            message(STATUS "unable to acquire MUSA compute capability: ${_ERROR_RESULT}")
-        else()
-            set(ZS_MUSA_ARCH ${_MUSA_COMPUTE_CAPABILITY})
-            separate_arguments(ZS_MUSA_ARCH)
-
-            message(STATUS "deduced MUSA compute capability: ${ZS_MUSA_ARCH}")
-        endif(_ERROR_RESULT)
 
         # message(STATUS "MUSAToolkit_VERSION_MAJOR: ${MUSAToolkit_VERSION_MAJOR}")
         # message(STATUS "MUSAToolkit_VERSION_MINOR: ${MUSAToolkit_VERSION_MINOR}")
@@ -198,21 +167,59 @@ if(ZS_ENABLE_MUSA)
         message(STATUS "MUSAToolkit_INCLUDE_DIRS: ${MUSAToolkit_INCLUDE_DIRS}")
         message(STATUS "MUSAToolkit_LIBRARY_DIR: ${MUSAToolkit_LIBRARY_DIR}")
 
-        foreach(MU_ARCH ${ZS_MUSA_ARCH})
-            message(STATUS "appending flag for musa arch: mp_${MU_ARCH}")
-            target_compile_options(zpc_musa_arch_options
-                INTERFACE $<$<COMPILE_LANGUAGE:MUSA>:--offload-arch=mp_${MU_ARCH}> >
+        # arch options
+        set(MUSA_ARCH_COMPILE_OPTIONS)
+        if(ZS_AUTO_DETECT_MUSA_ARCH)
+            set(_BINARY_TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/CMake/compile_tests/MUSAComputeCapabilityWorkdir)
+            file(REMOVE_RECURSE ${_BINARY_TEST_DIR})
+            file(MAKE_DIRECTORY ${_BINARY_TEST_DIR})
+
+            # cmake_path(GET MUSA_LIBRARIES PARENT_PATH MUSA_LINK_LIBRARY_DIR)
+            # https://stackoverflow.com/questions/19901934/libpthread-so-0-error-adding-symbols-dso-missing-from-command-line 
+            execute_process(
+                COMMAND ${MUSAToolkit_MCC_EXECUTABLE} -x musa ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/musa_compute_capability.cc -I${MUSAToolkit_INCLUDE_DIRS} -L${MUSAToolkit_LIBRARY_DIR} -Wl,--copy-dt-needed-entries -lmusart -o${_BINARY_TEST_DIR}/test_musa_capability
+                RESULT_VARIABLE _RESULT
+                OUTPUT_VARIABLE _OUTPUT_RESULT
+                ERROR_VARIABLE _ERROR_RESULT
             )
-        endforeach()
+            execute_process(
+                COMMAND ${_BINARY_TEST_DIR}/test_musa_capability
+                RESULT_VARIABLE _COMPILE_RESULT
+                OUTPUT_VARIABLE _MUSA_COMPUTE_CAPABILITY
+                ERROR_VARIABLE _ERROR_MESSAGE
+            )
+
+            set(ZS_MUSA_ARCH)
+
+            if(_ERROR_RESULT)
+                message(STATUS "unable to acquire MUSA compute capability: ${_ERROR_RESULT}")
+            else()
+                set(ZS_MUSA_ARCH ${_MUSA_COMPUTE_CAPABILITY})
+                separate_arguments(ZS_MUSA_ARCH)
+
+                message(STATUS "deduced MUSA compute capability: ${ZS_MUSA_ARCH}")
+            endif(_ERROR_RESULT)
+
+            foreach(MU_ARCH ${ZS_MUSA_ARCH})
+                message(STATUS "appending flag for musa arch: mp_${MU_ARCH}")
+                # target_compile_options(zpc_musa_arch_options
+                #     INTERFACE $<$<COMPILE_LANGUAGE:MUSA>:--offload-arch=mp_${MU_ARCH}> >
+                # )
+
+                list(APPEND MUSA_ARCH_COMPILE_OPTIONS --offload-arch=mp_${MU_ARCH})
+            endforeach()
+        endif(ZS_AUTO_DETECT_MUSA_ARCH)
+
+        set_property(GLOBAL APPEND PROPERTY ZS_MUSA_ARCH_COMPILE_OPTIONS "${MUSA_ARCH_COMPILE_OPTIONS}")
 
         # https://blog.mthreads.com/blog/musa/2024-05-20-%E4%BD%BF%E7%94%A8cmake%E6%9E%84%E5%BB%BAMUSA%E5%B7%A5%E7%A8%8B/
         target_link_libraries(zpc_deps INTERFACE zpc_musa_deps)
         # target_include_directories(zpc_musa_deps INTERFACE ${MUSA_INCLUDE_DIRS})
-        target_link_libraries(zpc_musa_deps INTERFACE MUSA::musart)
+        target_link_libraries(zpc_musa_deps INTERFACE MUSA::musart MUSA::musa_driver)
         # target_compile_options(zpc_musa_deps INTERFACE -fPIC -mtgpu-enable-const-calc)
     else()
         set(ZS_ENABLE_MUSA OFF)
-    endif(MUSA_FOUND)
+    endif(MUSAToolkit_FOUND)
     message(STATUS "############################### ZPC: MUSA (${ZS_ENABLE_MUSA}) ###############################")
 endif(ZS_ENABLE_MUSA)
 
@@ -271,7 +278,7 @@ if(ZS_ENABLE_VULKAN)
     ]=]
         # target_include_directories(zsproj_deps INTERFACE "$ENV{VULKAN_SDK}/include")
         target_include_directories(zsproj_deps INTERFACE ${Vulkan_INCLUDE_DIRS})
-        if(${Vulkan_VERSION} GREATER_EQUAL 1.4.0.0)
+        if(${Vulkan_VERSION} AND ${Vulkan_VERSION} VERSION_GREATER_EQUAL 1.4.0.0)
             target_compile_definitions(zsproj_deps INTERFACE
                 -DZS_VK_DYNAMIC_LOADER=vk::detail::DynamicLoader
                 -DZS_VK_DISPATCH_LOADER_DYNAMIC=vk::detail::DispatchLoaderDynamic
