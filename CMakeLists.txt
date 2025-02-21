@@ -271,14 +271,30 @@ if(ZS_ENABLE_VULKAN)
         message("-- additional available libraries: ${AVAILABLE_VK_ADDITIONAL_LIBS}")
         target_link_libraries(zsproj_deps INTERFACE ${AVAILABLE_VK_ADDITIONAL_LIBS})
         #[=[
-    target_link_libraries(zsproj_deps INTERFACE 
+        target_link_libraries(zsproj_deps INTERFACE 
       $<IF:$<CONFIG:Debug>, 
         shaderc_combinedd spirv-cross-glsld spirv-cross-cored spirv-cross-cppd, 
         shaderc_combined spirv-cross-glsl spirv-cross-core spirv-cross-cpp>)
-    ]=]
+        ]=]
         # target_include_directories(zsproj_deps INTERFACE "$ENV{VULKAN_SDK}/include")
         target_include_directories(zsproj_deps INTERFACE ${Vulkan_INCLUDE_DIRS})
-        if(${Vulkan_VERSION} AND ${Vulkan_VERSION} VERSION_GREATER_EQUAL 1.4.0.0)
+
+        # deduce namespace prefix for DynamicLoader and DispatchLoaderDynamic
+        set(_BINARY_TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/CMake/compile_tests/VulkanVersionCheckWorkdir)
+        file(REMOVE_RECURSE ${_BINARY_TEST_DIR})
+        file(MAKE_DIRECTORY ${_BINARY_TEST_DIR})
+        include_directories(${Vulkan_INCLUDE_DIRS})
+        try_run(
+            _RESULT
+            _COMPILE_RESULT
+            ${_BINARY_TEST_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/CMake/compile_tests/vulkan_version_check.cc
+            LINK_LIBRARIES Vulkan::Vulkan
+            RUN_OUTPUT_VARIABLE _VULKAN_VERSION_POST_1_4)
+        # message(STATUS "_RESULT: ${_RESULT}")
+        # message(STATUS "_COMPILE_RESULT: ${_COMPILE_RESULT}")
+        # message(STATUS "_VULKAN_VERSION_POST_1_4 : ${_VULKAN_VERSION_POST_1_4}")
+        if(_VULKAN_VERSION_POST_1_4 GREATER_EQUAL 1)
             target_compile_definitions(zsproj_deps INTERFACE
                 -DZS_VK_DYNAMIC_LOADER=vk::detail::DynamicLoader
                 -DZS_VK_DISPATCH_LOADER_DYNAMIC=vk::detail::DispatchLoaderDynamic
@@ -289,6 +305,11 @@ if(ZS_ENABLE_VULKAN)
                 -DZS_VK_DISPATCH_LOADER_DYNAMIC=vk::DispatchLoaderDynamic
             )
         endif()
+        #[=[
+        # Vulkan_VERSION only available post cmake 3.23
+        if(${Vulkan_VERSION} AND ${Vulkan_VERSION} VERSION_GREATER_EQUAL 1.4.0.0)
+        endif()
+        #]=]
 
         if(NOT EXISTS ${Vulkan_INCLUDE_DIR}/vma/vk_mem_alloc.h)
             target_include_directories(zsproj_deps INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/vma")
