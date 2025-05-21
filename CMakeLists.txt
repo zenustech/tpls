@@ -396,6 +396,16 @@ if(ZS_ENABLE_JIT)
 endif()
 
 # intel-sycl
+# pre-check compiler to avoid IntelSYCL.cmake error in absence of oneapi compiler
+if(WIN32 AND (NOT CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "GNU"))
+    find_program(ZS_INTEL_SYCL_COMPILER NAMES icx icx-cl)
+else()
+    find_program(ZS_INTEL_SYCL_COMPILER icpx)
+endif()
+if (NOT ZS_INTEL_SYCL_COMPILER)
+    set(ZS_ENABLE_SYCL_ONEAPI OFF)
+endif()
+
 if(ZS_ENABLE_SYCL_ONEAPI)
     message(STATUS "\n-- ------------------------------- Checking Intel SYCL ------------------------------- ")
     # get_filename_component(ZS_CXX_COMPILER_BINARY ${CMAKE_CXX_COMPILER} NAME)
