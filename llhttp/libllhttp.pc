@@ -1,0 +1,10 @@
+prefix=E:/Codes/zs-app/out/install/x64-Debug-win11
+exec_prefix=E:/Codes/zs-app/out/install/x64-Debug-win11/bin
+libdir=E:/Codes/zs-app/out/install/x64-Debug-win11/lib
+includedir=E:/Codes/zs-app/out/install/x64-Debug-win11/include
+
+Name: libllhttp
+Description: Node.js llhttp Library
+Version: 9.3.0
+Libs: -L${libdir} -lllhttp
+Cflags: -I${includedir}

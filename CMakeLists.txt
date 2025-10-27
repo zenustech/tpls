@@ -14,6 +14,7 @@ option(ZS_ENABLE_JIT "Enable JIT module" OFF)
 option(ZS_ENABLE_PTHREADS "Enable pthreads" OFF)
 option(ZS_ENABLE_PARTIO "Enable partio" ON)
 option(ZS_ENABLE_MSHIO "Enable .msh file io" OFF)
+option(ZS_ENABLE_LLHTTP "Enable llhttp" ON)
 
 # CUDA
 option(ZS_AUTO_DETECT_CUDA_ARCH "Let cmake determine target cuda architecture" ON)
@@ -693,6 +694,13 @@ target_include_directories(zsproj_deps INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/asio
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>/asio
 )
+
+# llhttps
+if(ZS_ENABLE_LLHTTP)
+    add_subdirectory(llhttp EXCLUDE_FROM_ALL)
+endif(ZS_ENABLE_LLHTTP)
+
+set(ZS_ENABLE_LLHTTP ${ZS_ENABLE_LLHTTP} PARENT_SCOPE)
 
 # other local tpls
 # fmt
