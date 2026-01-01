@@ -243,7 +243,7 @@ if(ZS_ENABLE_VULKAN)
         message("-- (deduced) vulkan library directory: ${ZS_VULKAN_LINK_DIRECTORY}")
         target_link_directories(zsproj_deps INTERFACE ${ZS_VULKAN_LINK_DIRECTORY})
 
-        set(VK_ADDITIONAL_LIBS shaderc_combined spirv-cross-glsl spirv-cross-core spirv-cross-cpp)
+        set(VK_ADDITIONAL_LIBS shaderc_combined dxcompiler spirv-cross-glsl spirv-cross-core spirv-cross-cpp)
         set(AVAILABLE_VK_ADDITIONAL_LIBS "")
         foreach(lib ${VK_ADDITIONAL_LIBS})
             set(found False)
