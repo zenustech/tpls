@@ -114,7 +114,7 @@ if(ZS_ENABLE_CUDA)
                 separate_arguments(ZS_CUDA_ARCH)
                 message(STATUS "deduced cuda arch: ${ZS_CUDA_ARCH}")
 
-                list(APPEND ZS_CUDA_ARCH 52)
+                # list(APPEND ZS_CUDA_ARCH 62)
 
                 foreach(CU_ARCH ${ZS_CUDA_ARCH})
                     message(STATUS "appending flag for cuda arch: ${CU_ARCH}")
