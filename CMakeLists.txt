@@ -338,6 +338,39 @@ if(ZS_ENABLE_JIT)
         message(STATUS "llvm inc dir: ${LLVM_INCLUDE_DIRS}")
 
         find_package(Clang CONFIG HINTS "${LLVM_DIR}/../clang" "${LLVM_DIR}/../lib/cmake/clang")
+
+        # Fix $(Configuration) placeholder from multi-config LLVM builds (VS generator)
+        # that breaks single-config generators like Ninja.
+        # Must be AFTER find_package(Clang) since Clang's config resets LLVM vars.
+        if(LLVM_LIBRARY_DIR MATCHES "\\$\\(Configuration\\)")
+            string(REPLACE "$(Configuration)" "${CMAKE_BUILD_TYPE}" LLVM_LIBRARY_DIR "${LLVM_LIBRARY_DIR}")
+            string(REPLACE "$(Configuration)" "${CMAKE_BUILD_TYPE}" LLVM_LIBRARY_DIRS "${LLVM_LIBRARY_DIRS}")
+            string(REPLACE "$(Configuration)" "${CMAKE_BUILD_TYPE}" LLVM_TOOLS_BINARY_DIR "${LLVM_TOOLS_BINARY_DIR}")
+            message(STATUS "Fixed LLVM paths for single-config generator: ${LLVM_LIBRARY_DIR}")
+        endif()
+
+        # Fix imported targets whose IMPORTED_LOCATION contains $(Configuration).
+        # Specific targets affected: PollyISL, libomp, clang-resource-headers.
+        foreach(_fix_target PollyISL omp clang-resource-headers)
+            if(NOT TARGET ${_fix_target})
+                continue()
+            endif()
+            foreach(_fix_prop
+                IMPORTED_LOCATION IMPORTED_IMPLIB
+                IMPORTED_LOCATION_DEBUG IMPORTED_IMPLIB_DEBUG
+                IMPORTED_LOCATION_RELEASE IMPORTED_IMPLIB_RELEASE
+                IMPORTED_LOCATION_MINSIZEREL IMPORTED_IMPLIB_MINSIZEREL
+                IMPORTED_LOCATION_RELWITHDEBINFO IMPORTED_IMPLIB_RELWITHDEBINFO
+                INTERFACE_INCLUDE_DIRECTORIES)
+                get_target_property(_fix_val ${_fix_target} ${_fix_prop})
+                if(_fix_val AND _fix_val MATCHES "\\$\\(Configuration\\)")
+                    string(REPLACE "$(Configuration)" "${CMAKE_BUILD_TYPE}" _fix_val "${_fix_val}")
+                    set_target_properties(${_fix_target} PROPERTIES ${_fix_prop} "${_fix_val}")
+                    message(STATUS "Fixed ${_fix_target}::${_fix_prop} -> ${_fix_val}")
+                endif()
+            endforeach()
+        endforeach()
+
         if(Clang_FOUND AND ${LLVM_PACKAGE_VERSION} GREATER_EQUAL 15)
             message(STATUS "Using ClangConfig.cmake in: ${Clang_DIR}")
             message(STATUS "clang inc dir: ${CLANG_INCLUDE_DIRS}")
@@ -348,36 +381,45 @@ if(ZS_ENABLE_JIT)
             target_include_directories(zpc_jit_deps INTERFACE
                 $<$<COMPILE_LANGUAGE:CXX>: ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS}>)
 
-            llvm_map_components_to_libnames(llvm_libs support core irreader)
+            # LLVM components needed for JIT (py_interop/Clang.cpp) + reflect_tool:
+            #   OrcJIT (LLJIT.h), ExecutionEngine, BitReader, Target/MC, Support, Core, IRReader
+            llvm_map_components_to_libnames(llvm_libs
+                support core irreader bitreader
+                orcjit executionengine mcjit runtimedyld
+                native target mc
+            )
 
+            # Clang libs needed for JIT + reflect_tool
+            # Excludes clangFrontendTool (pulls in static analyzer -> LLVMPasses -> Polly)
             set(CLANG_LIBS
-                libclang clangBasic clangAPINotes clangLex clangParse clangAST clangDynamicASTMatchers clangASTMatchers clangCrossTU clangSema clangCodeGen clangAnalysis clangAnalysisFlowSensitive clangAnalysisFlowSensitiveModels clangEdit clangExtractAPI clangRewrite clangDriver clangSerialization clangRewriteFrontend clangFrontend clangFrontendTool clangToolingCore clangToolingInclusions clangToolingRefactoring clangToolingASTDiff clangToolingSyntax clangDependencyScanning clangTransformer clangTooling clangDirectoryWatcher clangIndex clangIndexSerialization clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangStaticAnalyzerFrontend clangFormat clangInterpreter clangHandleCXX clangHandleLLVM)
-            # libclang is the only lib without prefix
-            set(CLANG_AVAILABLE_LIBS "libclang")
-            set(CLANG_AVAILABLE_LIB_FILES "libclang")
+                clangBasic clangAPINotes clangLex clangParse clangAST clangSema
+                clangCodeGen clangAnalysis clangEdit clangRewrite
+                clangDriver clangSerialization clangFrontend
+                clangTooling clangToolingCore)
+            set(CLANG_AVAILABLE_LIBS "")
             foreach(lib ${CLANG_LIBS})
-                if(NOT lib STREQUAL "libclang")
+                if(TARGET ${lib})
+                    list(APPEND CLANG_AVAILABLE_LIBS ${lib})
+                else()
+                    # Fallback: find on disk
                     set(found False)
                     foreach(suffix ${CMAKE_FIND_LIBRARY_SUFFIXES})
                         set(libfile ${LLVM_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${lib}${suffix})
                         if(EXISTS ${libfile})
                             if(found)
                                 message(FATAL_ERROR "Multiple library types of [${lib}] is found! Unable to determine.")
-                            endif(found)
-                            list(APPEND CLANG_AVAILABLE_LIBS ${lib})
-                            list(APPEND CLANG_AVAILABLE_LIB_FILES ${libfile})
+                            endif()
+                            list(APPEND CLANG_AVAILABLE_LIBS ${libfile})
                             set(found True)
-                        endif(EXISTS ${libfile})
-                    endforeach(suffix ${CMAKE_FIND_LIBRARY_SUFFIXES})
-                endif(NOT lib STREQUAL "libclang")
-            endforeach(lib ${CLANG_LIBS})
+                        endif()
+                    endforeach()
+                endif()
+            endforeach()
 
             message(STATUS "llvm compile definitions: ${LLVM_DEFINITIONS_LIST}")
-            message(STATUS "available llvm libs: ${LLVM_AVAILABLE_LIBS}")
             message(STATUS "required llvm libs: ${llvm_libs}")
             message(STATUS "available clang libs: ${CLANG_AVAILABLE_LIBS}")
 
-            target_link_directories(zpc_jit_deps INTERFACE ${LLVM_LIBRARY_DIR})
             target_link_libraries(zpc_jit_deps INTERFACE
                 zpc_cxx_deps ${llvm_libs} ${CLANG_AVAILABLE_LIBS})
 
